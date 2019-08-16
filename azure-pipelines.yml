@@ -30,7 +30,7 @@ jobs:
 
   - script: |
       source bin/activate
-      python -m black -l 100 --check *.py
+      python -m black -l 100 --check dotstrings/*.py
     displayName: 'Format Check (Black)'
 
   - script: |
