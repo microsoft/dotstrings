@@ -1,0 +1,3 @@
+/* This is a comment.
+It spans multiple lines */
+"This is a key" = "This is a value";

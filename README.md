@@ -1,3 +1,20 @@
+# dotstrings
+
+This is a Python toolkit for interacting with the localization files for iOS and macOS.
+
+### Examples
+
+**Read in a .strings file and print the entries:**
+```python
+import dotstrings
+
+entries = dotstrings.load("/path/to/file.strings")
+
+for entry in entries:
+    print("Key: " + entry.key)
+    print("Value: " + entry.value)
+    print("Comment: " + entry.comment)
+```
 
 # Contributing
 

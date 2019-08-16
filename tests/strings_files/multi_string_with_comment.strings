@@ -1,0 +1,11 @@
+/* Multi-line
+comment */
+"One" = "1";
+
+/* Single line comment */
+"Two" = "2";
+
+/* Three Comment */
+"Three" = "3";
+/* No line break comment */
+"Four" = "4";
