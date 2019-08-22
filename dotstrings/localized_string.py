@@ -4,6 +4,8 @@ import hashlib
 import re
 from typing import ClassVar, List, Optional, Pattern
 
+from dotstrings.dot_strings_entry import DotStringsEntry
+
 
 class LocalizedString:
     """Represents a localized string.
@@ -181,3 +183,32 @@ class LocalizedString:
         :return: A string representation of the object
         """
         return self.__repr__()
+
+    @staticmethod
+    def from_dotstring_entries(
+        *, entries: List[DotStringsEntry], language: str, table: str
+    ) -> List["LocalizedString"]:
+        """Convert a list of DotStringsEntry's into a list of LocalizedString's
+
+        :param List[DotStringsEntry] entries: The DotStringsEntry's to convert
+        :param str language: The language the DotStringsEntry's are in
+        :param str table: The table the DotStringsEntry's are from
+
+        :returns: A list of LocalizedStrings
+        """
+
+        output = []
+
+        for entry in entries:
+            localized = LocalizedString(
+                key=entry.key,
+                value=entry.value,
+                language=language,
+                table=table,
+                comment=entry.comment,
+                key_extension=None,
+                bundle="",
+            )
+            output.append(localized)
+
+        return output
