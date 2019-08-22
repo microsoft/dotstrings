@@ -5,7 +5,7 @@
 import re
 from typing import List, Match, Optional, TextIO, Tuple, Union
 
-from dotstrings.string_types import DotStringsEntry
+from dotstrings.dot_strings_entry import DotStringsEntry
 
 
 _ENTRY_REGEX = r'^"(.+)"\s?=\s?"(.+)";$'
