@@ -35,11 +35,27 @@ class BundleTests(unittest.TestCase):
         strings = dotstrings.load_all_strings(self.bundle_path)
         self.assertEqual(sorted(strings.languages()), ["en", "fr"])
 
+    def test_localized_bundle_table_names(self):
+        """Test that the table_names call in localized bundles works."""
+        strings = dotstrings.load_all_strings(self.bundle_path)
+        self.assertEqual(sorted(strings.table_names(validate_identical=True)), ["One", "Two"])
+        self.assertEqual(sorted(strings.table_names(validate_identical=False)), ["One", "Two"])
+
     def test_localized_bundle_tables(self):
         """Test that the tables call in localized bundles works."""
         strings = dotstrings.load_all_strings(self.bundle_path)
-        self.assertEqual(sorted(strings.tables(validate_identical=True)), ["One", "Two"])
-        self.assertEqual(sorted(strings.tables(validate_identical=False)), ["One", "Two"])
+        tables = strings.tables()
+        self.assertEqual(sorted(list(tables.keys())), ["One", "Two"])
+
+        table_one = tables["One"]
+        self.assertEqual(sorted(list(table_one.keys())), ["en", "fr"])
+        self.assertEqual(len(table_one["en"]), 2)
+        self.assertEqual(len(table_one["fr"]), 2)
+
+        table_two = tables["Two"]
+        self.assertEqual(sorted(list(table_two.keys())), ["en", "fr"])
+        self.assertEqual(len(table_two["en"]), 1)
+        self.assertEqual(len(table_two["fr"]), 1)
 
     def test_localized_bundle_tables_for_language(self):
         """Test that the tables_for_language call in localized bundles works."""

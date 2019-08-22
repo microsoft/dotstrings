@@ -21,7 +21,7 @@ class LocalizedBundle:
         """
         return list(self.raw_entries.keys())
 
-    def tables(self, validate_identical: bool = False) -> List[str]:
+    def table_names(self, validate_identical: bool = False) -> List[str]:
         """Return the tables in the bundle.
 
         :param validate_identical: Set to True to confirm all languages have the
@@ -57,7 +57,7 @@ class LocalizedBundle:
 
         :param language: The language to get the tables for
 
-        :returns: A table map
+        :returns: A dictionary of table names to lists of strings
         """
         return self.raw_entries[language]
 
@@ -66,12 +66,39 @@ class LocalizedBundle:
 
         :param table: The table to load the data for
 
-        :returns: A map of language codes to a list of strings
+        :returns: A dictionary of language codes to a list of strings
         """
         results = {}
 
         for language, table_map in self.raw_entries.items():
             results[language] = table_map[table]
+
+        return results
+
+    def tables(self) -> Dict[str, Dict[str, List[LocalizedString]]]:
+        """Return the entries in the bundle, first keyed by table, then by language.
+
+        Example response:
+
+        ```
+        {
+            "MyTable": {
+                "en": [x, y, z],
+                "fr": [x, y, z]
+            },
+            "OtherTable": {
+                "en": [a, b, c],
+                "fr": [a, b, c]
+            }
+        }
+        ```
+
+        :returns: A dictionary of table names to a dictionary of languages to strings
+        """
+        results = {}
+
+        for table_name in self.table_names():
+            results[table_name] = self.table_for_languages(table_name)
 
         return results
 
