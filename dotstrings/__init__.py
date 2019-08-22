@@ -4,3 +4,5 @@
 
 from dotstrings.parser import load, loads
 from dotstrings.string_types import DotStringsEntry
+
+import dotstrings.parser2
