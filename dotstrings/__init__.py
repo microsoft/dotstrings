@@ -48,6 +48,24 @@ def languages_in_folder(strings_folder: str) -> Set[str]:
     return {language.replace(".lproj", "") for language in languages}
 
 
+def load_table(strings_folder: str, language: str, table_name: str) -> List[LocalizedString]:
+    """Load the specified .strings table
+
+    :param strings_folder: The location of the strings folder (which contains
+                           all the *.lproj folders)
+    :param language: The language code to load
+    :param table_name: The name of the table to load
+
+    :returns: A list of strings in the table
+    """
+
+    table_path = strings_file_path(strings_folder, language, table_name)
+    strings = load(table_path)
+    return LocalizedString.from_dotstring_entries(
+        entries=strings, language=language, table=table_name
+    )
+
+
 def load_language_tables(strings_folder: str, language: str) -> Dict[str, List[LocalizedString]]:
     """Load the .strings tables for a given language
 
@@ -64,13 +82,8 @@ def load_language_tables(strings_folder: str, language: str) -> Dict[str, List[L
     results = {}
 
     for table in os.listdir(language_folder):
-        table_path = os.path.join(language_folder, table)
         table_name = table.replace(".strings", "")
-        strings = load(table_path)
-
-        results[table_name] = LocalizedString.from_dotstring_entries(
-            entries=strings, language=language, table=table_name
-        )
+        results[table_name] = load_table(strings_folder, language, table_name)
 
     return results
 
