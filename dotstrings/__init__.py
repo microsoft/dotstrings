@@ -5,6 +5,7 @@ from typing import Dict, List, Set
 
 from dotstrings.parser import load, loads
 from dotstrings.dot_strings_entry import DotStringsEntry
+from dotstrings.localized_bundle import LocalizedBundle
 from dotstrings.localized_string import LocalizedString
 
 
@@ -88,16 +89,14 @@ def load_language_tables(strings_folder: str, language: str) -> Dict[str, List[L
     return results
 
 
-def load_all_strings(strings_folder: str) -> Dict[str, Dict[str, List[LocalizedString]]]:
+def load_all_strings(strings_folder: str) -> LocalizedBundle:
     """Load the .strings tables for a given language
 
     :param strings_folder: The location of the strings folder (which contains
                            all the *.lproj folders)
     :param language: The language code to load
 
-    :returns: A dictionary of results. The key is the language, the value is a
-              dictionary of language results (key is the table, value is the
-              list of string entries)
+    :returns: A LocalizedBundle containing the results
     """
 
     languages = languages_in_folder(strings_folder)
@@ -107,4 +106,4 @@ def load_all_strings(strings_folder: str) -> Dict[str, Dict[str, List[LocalizedS
     for language in languages:
         results[language] = load_language_tables(strings_folder, language)
 
-    return results
+    return LocalizedBundle(results)
