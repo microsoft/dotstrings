@@ -1,6 +1,5 @@
 """Wrapper around the genstrings command"""
 
-import logging
 import os
 import shutil
 import subprocess
@@ -21,8 +20,6 @@ def _convert_to_utf8(file_path: str) -> None:
     temp_file_path = tempfile.mktemp()
 
     iconv_command = f'iconv -f UTF-16 -t UTF-8 "{file_path}" > "{temp_file_path}"'
-
-    logging.debug(f"Running: {iconv_command}")
 
     if subprocess.run(iconv_command, shell=True).returncode != 0:
         raise Exception("Unable to convert from UTF-16 to UTF-8!")
@@ -73,11 +70,8 @@ def generate_strings(
     # Empty existing strings
     if clear_existing:
         for table in os.listdir(english_strings_directory):
-            logging.info(f"Clearing table: {table}")
             with open(os.path.join(english_strings_directory, table), "w") as table_file:
                 table_file.write("")
-
-    logging.info("Generating English strings files...")
 
     # We can't pass in too many files on the command line or the argument list
     # is too long. To avoid this, we do it in chunks of 100.
@@ -116,14 +110,9 @@ def generate_strings(
         except subprocess.CalledProcessError as ex:
             raise Exception(f"Unable generate .strings files! {ex}")
 
-    logging.info("Converting strings to UTF-8")
-
     # Convert all .strings files to UTF-8
     for file_name in os.listdir(english_strings_directory):
         file_path = os.path.join(english_strings_directory, file_name)
         # Check for file type and .strings extension
         if file_name.endswith(".strings") and os.path.isfile(file_path):
             _convert_to_utf8(file_path)
-
-    # Success
-    logging.info("Success")

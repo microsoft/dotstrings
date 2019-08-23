@@ -40,10 +40,9 @@ def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> Li
             with open(file_details, "r", encoding=encoding_option) as strings_file:
                 return load(strings_file)
         except UnicodeDecodeError:
-            # We should log this or something?
             pass
 
-    raise Exception("Could not determine encoding for file at path: {file_details}")
+    raise Exception(f"Could not determine encoding for file at path: {file_details}")
 
 
 def loads(contents: str) -> List[DotStringsEntry]:
