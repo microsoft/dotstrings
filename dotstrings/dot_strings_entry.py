@@ -20,6 +20,13 @@ class DotStringsEntry:
         self.value = value
         self.comment = comment
 
+    def strings_format(self) -> str:
+        """Return the entry as would be formatted in a .strings file
+
+        :returns: The .strings representation of this entry
+        """
+        return f'/* {self.comment} */\n"{self.key}" = "{self.value}";'
+
     def __repr__(self) -> str:
         """Returns a raw representation of the object which can be used to reconstruct it later.
 
@@ -32,4 +39,4 @@ class DotStringsEntry:
 
         :return: A string representation of the object
         """
-        return str(self.__repr__())
+        return self.__repr__()

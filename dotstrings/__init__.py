@@ -1,7 +1,7 @@
 """Utilities for dealing with .strings files"""
 
 import os
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 
 from dotstrings.parser import load, loads
 from dotstrings.dot_strings_entry import DotStringsEntry
@@ -107,3 +107,54 @@ def load_all_strings(strings_folder: str) -> LocalizedBundle:
         results[language] = load_language_tables(strings_folder, language)
 
     return LocalizedBundle(results)
+
+
+def normalize(
+    strings_path: str, output_path: Optional[str] = None, remove_duplicates: bool = True
+) -> None:
+    """Load in the specified .strings table, normalize it, and write it back out.
+
+    Normalizing consists of sorting by key, then comments, and (usually)
+    deduplicating before writing back out.
+
+    :param strings_path: The location of the strings file
+    :param output_path: The location to write the sorted file to. If None, it
+                        will overwrite the input file.
+    :param remove_duplicates: By default, any duplicates will be removed and
+                              their comments combined. Set to False to raise
+                              an exception instead
+    """
+
+    entries = load(strings_path)
+    entries.sort(key=lambda x: (x.key, x.comment))
+
+    deduped_entries = [entries[0]]
+
+    for entry in entries[1:]:
+        if deduped_entries[-1].key == entry.key:
+            # If we have duplicate keys but the values don't match, that's an
+            # exception, whether or not we are removing duplicates
+            if deduped_entries[-1].value != entry.value or not remove_duplicates:
+                raise Exception(f"Found duplicate strings with key: {entry.key}")
+
+            if entry.comment:
+                comment = deduped_entries[-1].comment
+
+                if comment is None:
+                    comment = entry.comment
+                else:
+                    comment += "\n" + entry.comment
+
+                deduped_entries[-1].comment = comment
+
+            continue
+
+        deduped_entries.append(entry)
+
+    if output_path is None:
+        output_path = strings_path
+
+    with open(output_path, "w") as strings_file:
+        for entry in deduped_entries:
+            strings_file.write(entry.strings_format())
+            strings_file.write("\n\n")
