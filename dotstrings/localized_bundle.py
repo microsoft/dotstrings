@@ -1,6 +1,6 @@
 """Representation of a localized bundle."""
 
-from typing import Dict, List
+from typing import cast, Dict, List, Set
 
 from dotstrings.localized_string import LocalizedString
 
@@ -32,25 +32,44 @@ class LocalizedBundle:
 
         if validate_identical:
 
-            found_keys = []
-            for table_map in self.raw_entries.values():
-                found_keys.append(sorted(table_map.keys()))
+            # Build up a map of languages to table names
 
-            pairs = zip(found_keys, found_keys[1:] + found_keys[:1])
+            found_tables: Dict[str, Set[str]] = {}
+            for language, table_map in self.raw_entries.items():
+                # table_map is a dictionary of names to lists of strings
+                found_tables[language] = set(table_map.keys())
 
-            for first, second in pairs:
-                if first != second:
-                    raise Exception("Not all languages have the same tables")
+            if len(found_tables) == 0:
+                return []
 
-            return found_keys[0]
+            base_language = list(found_tables.keys())[0]
+            base_language_tables = found_tables[base_language]
 
-        found_tables = set()
+            for language, table_names in found_tables.items():
+                extra_tables = table_names - base_language_tables
+                missing_tables = base_language_tables - table_names
+
+                if len(extra_tables) > 0:
+                    raise Exception(
+                        f"The following table names were in {language}"
+                        + f" but not in {base_language}: {extra_tables}"
+                    )
+
+                if len(missing_tables) > 0:
+                    raise Exception(
+                        f"The following table names were in {base_language}"
+                        + f" but not in {language}: {missing_tables}"
+                    )
+
+            return list(base_language_tables)
+
+        all_table_names = set()
 
         for table_map in self.raw_entries.values():
             for table in table_map.keys():
-                found_tables.add(table)
+                all_table_names.add(table)
 
-        return list(found_tables)
+        return list(all_table_names)
 
     def tables_for_language(self, language: str) -> Dict[str, List[LocalizedString]]:
         """Return the tables for a language.
@@ -59,7 +78,13 @@ class LocalizedBundle:
 
         :returns: A dictionary of table names to lists of strings
         """
-        return self.raw_entries[language]
+        sentinel = object()
+        result = self.raw_entries.get(language, sentinel)
+
+        if result == sentinel:
+            raise Exception(f"There were no entries for language: {language}")
+
+        return cast(Dict[str, List[LocalizedString]], result)
 
     def table_for_languages(self, table: str) -> Dict[str, List[LocalizedString]]:
         """Return a dictionary of languages to strings for a given table.
@@ -71,7 +96,13 @@ class LocalizedBundle:
         results = {}
 
         for language, table_map in self.raw_entries.items():
-            results[language] = table_map[table]
+            sentinel = object()
+            table_data = table_map.get(table, sentinel)
+
+            if table_data == sentinel:
+                raise Exception(f"Could not find table {table} for language {language}")
+
+            results[language] = cast(List[LocalizedString], table_data)
 
         return results
 
