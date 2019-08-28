@@ -83,6 +83,8 @@ def load_language_tables(strings_folder: str, language: str) -> Dict[str, List[L
     results = {}
 
     for table in os.listdir(language_folder):
+        if not table.endswith(".strings"):
+            continue
         table_name = table.replace(".strings", "")
         results[table_name] = load_table(strings_folder, language, table_name)
 
