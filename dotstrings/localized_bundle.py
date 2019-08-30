@@ -81,7 +81,7 @@ class LocalizedBundle:
         sentinel = object()
         result = self.raw_entries.get(language, sentinel)
 
-        if result == sentinel:
+        if result is sentinel:
             raise Exception(f"There were no entries for language: {language}")
 
         return cast(Dict[str, List[LocalizedString]], result)
@@ -99,7 +99,7 @@ class LocalizedBundle:
             sentinel = object()
             table_data = table_map.get(table, sentinel)
 
-            if table_data == sentinel:
+            if table_data is sentinel:
                 raise Exception(f"Could not find table {table} for language {language}")
 
             results[language] = cast(List[LocalizedString], table_data)
