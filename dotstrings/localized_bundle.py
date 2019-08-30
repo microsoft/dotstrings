@@ -86,10 +86,13 @@ class LocalizedBundle:
 
         return cast(Dict[str, List[LocalizedString]], result)
 
-    def table_for_languages(self, table: str) -> Dict[str, List[LocalizedString]]:
+    def table_for_languages(
+        self, table: str, *, allow_missing: bool = False
+    ) -> Dict[str, List[LocalizedString]]:
         """Return a dictionary of languages to strings for a given table.
 
         :param table: The table to load the data for
+        :param bool allow_missing: Set to True to allow a table to be missing for any languages
 
         :returns: A dictionary of language codes to a list of strings
         """
@@ -99,15 +102,19 @@ class LocalizedBundle:
             sentinel = object()
             table_data = table_map.get(table, sentinel)
 
-            if table_data is sentinel:
+            if table_data is sentinel and not allow_missing:
                 raise Exception(f"Could not find table {table} for language {language}")
 
             results[language] = cast(List[LocalizedString], table_data)
 
         return results
 
-    def tables(self) -> Dict[str, Dict[str, List[LocalizedString]]]:
+    def tables(
+        self, *, validate_missing: bool = True
+    ) -> Dict[str, Dict[str, List[LocalizedString]]]:
         """Return the entries in the bundle, first keyed by table, then by language.
+
+        :param bool validate_missing: Set to False to disable the check that a table exists for every language
 
         Example response:
 
@@ -129,7 +136,9 @@ class LocalizedBundle:
         results = {}
 
         for table_name in self.table_names():
-            results[table_name] = self.table_for_languages(table_name)
+            results[table_name] = self.table_for_languages(
+                table_name, allow_missing=(not validate_missing)
+            )
 
         return results
 
