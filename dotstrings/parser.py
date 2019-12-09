@@ -165,14 +165,14 @@ def _parse_entry(entry: str) -> DotStringsEntry:
         if "*/" in line:
             in_comment = False
 
-    # Remove the final new line which is an artifact of the comment parsing
-    if comment.endswith("\n"):
-        comment = comment[:-1]
-
     # If we didn't find any comment, set it to None
     if len(comment) == 0:
-        return DotStringsEntry(key, value, None)
+        return DotStringsEntry(key, value, [])
 
-    return DotStringsEntry(key, value, comment)
+    comments = comment.split("\n")
+    comments = [comment.strip() for comment in comments]
+    comments = [comment for comment in comments if len(comment) > 0]
+
+    return DotStringsEntry(key, value, comments)
 
     # pylint: enable=too-many-branches

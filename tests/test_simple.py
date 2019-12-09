@@ -26,7 +26,7 @@ class SimpleTests(unittest.TestCase):
         entry = entries[0]
         self.assertEqual(entry.key, "This is a key")
         self.assertEqual(entry.value, "This is a value")
-        self.assertIsNone(entry.comment)
+        self.assertEqual(0, len(entry.comments))
 
     def test_single_string_with_comment(self):
         """Test that a single string with comment load works."""
@@ -36,7 +36,7 @@ class SimpleTests(unittest.TestCase):
         entry = entries[0]
         self.assertEqual(entry.key, "This is a key")
         self.assertEqual(entry.value, "This is a value")
-        self.assertEqual(entry.comment, "This is a comment.\nIt spans multiple lines")
+        self.assertEqual(entry.comments, ["This is a comment.", "It spans multiple lines"])
 
     def test_multi_string_with_comment(self):
         """Test that multiple strings with comments load works."""
@@ -46,16 +46,16 @@ class SimpleTests(unittest.TestCase):
 
         self.assertEqual(entries[0].key, "One")
         self.assertEqual(entries[0].value, "1")
-        self.assertEqual(entries[0].comment, "Multi-line\ncomment")
+        self.assertEqual(entries[0].comments, ["Multi-line", "comment"])
 
         self.assertEqual(entries[1].key, "Two")
         self.assertEqual(entries[1].value, "2")
-        self.assertEqual(entries[1].comment, "Single line comment")
+        self.assertEqual(entries[1].comments, ["Single line comment"])
 
         self.assertEqual(entries[2].key, "Three")
         self.assertEqual(entries[2].value, "3")
-        self.assertEqual(entries[2].comment, "Three Comment")
+        self.assertEqual(entries[2].comments, ["Three Comment"])
 
         self.assertEqual(entries[3].key, "Four")
         self.assertEqual(entries[3].value, "4")
-        self.assertEqual(entries[3].comment, "No line break comment")
+        self.assertEqual(entries[3].comments, ["No line break comment"])

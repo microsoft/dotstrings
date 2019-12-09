@@ -13,7 +13,7 @@ entries = dotstrings.load("/path/to/file.strings")
 for entry in entries:
     print("Key: " + entry.key)
     print("Value: " + entry.value)
-    print("Comment: " + entry.comment)
+    print("Comments: " + "\n".join(entry.comments))
 ```
 
 # Contributing

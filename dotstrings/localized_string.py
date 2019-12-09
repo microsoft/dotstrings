@@ -205,7 +205,7 @@ class LocalizedString:
                 value=entry.value,
                 language=language,
                 table=table,
-                comment=entry.comment,
+                comment="\n".join(entry.comments),
                 key_extension=None,
                 bundle="",
             )

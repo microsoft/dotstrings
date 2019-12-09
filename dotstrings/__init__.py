@@ -112,7 +112,10 @@ def load_all_strings(strings_folder: str) -> LocalizedBundle:
 
 
 def normalize(
-    strings_path: str, output_path: Optional[str] = None, remove_duplicates: bool = True
+    strings_path: str,
+    output_path: Optional[str] = None,
+    remove_duplicates: bool = True,
+    sort_comments: bool = True,
 ) -> None:
     """Load in the specified .strings table, normalize it, and write it back out.
 
@@ -125,33 +128,33 @@ def normalize(
     :param remove_duplicates: By default, any duplicates will be removed and
                               their comments combined. Set to False to raise
                               an exception instead
+    :param sort_comments: By default comments will be sorted in alphabetical
+                          order. However, if you use linebreaks in your comments
+                          you will wish to turn this off.
     """
 
     entries = load(strings_path)
-    entries.sort(key=lambda x: (x.key, x.comment))
+    entries.sort(key=lambda x: [x.key] + x.comments)
 
     deduped_entries = [entries[0]]
 
     for entry in entries[1:]:
-        if deduped_entries[-1].key == entry.key:
-            # If we have duplicate keys but the values don't match, that's an
-            # exception, whether or not we are removing duplicates
-            if deduped_entries[-1].value != entry.value or not remove_duplicates:
-                raise Exception(f"Found duplicate strings with key: {entry.key}")
 
-            if entry.comment:
-                comment = deduped_entries[-1].comment
-
-                if comment is None:
-                    comment = entry.comment
-                else:
-                    comment += "\n" + entry.comment
-
-                deduped_entries[-1].comment = comment
-
+        # If the keys are different, just add to the list and move on
+        if deduped_entries[-1].key != entry.key:
+            deduped_entries.append(entry)
             continue
 
-        deduped_entries.append(entry)
+        # If we have duplicate keys but the values don't match, that's an
+        # exception, whether or not we are removing duplicates
+        if deduped_entries[-1].value != entry.value or not remove_duplicates:
+            raise Exception(f"Found duplicate strings with key: {entry.key}")
+
+        deduped_entries[-1].comments.extend(entry.comments)
+
+    if sort_comments:
+        for entry in deduped_entries:
+            entry.comments.sort()
 
     if output_path is None:
         output_path = strings_path

@@ -83,20 +83,12 @@ def generate_strings(
         current_files = file_paths[i * files_per_iteration : (i + 1) * files_per_iteration]
 
         genstrings_command = ["xcrun", "extractLocStrings", "-a", "-noPositionalParameters", "-u"]
-        genstrings_command += ["-o", f'"{english_strings_directory}"']
-
-        genstrings_command += [f'"{path}"' for path in current_files]
-
-        # For some reason it doesn't work if you do it as a list. It has to be
-        # a string.
-        genstrings_command_string = " ".join(genstrings_command)
-
-        # print(genstrings_command)
+        genstrings_command += ["-o", english_strings_directory]
+        genstrings_command.extend(current_files)
 
         try:
             output = subprocess.run(
-                genstrings_command_string,
-                shell=True,
+                genstrings_command,
                 universal_newlines=True,
                 check=True,
                 stdout=subprocess.PIPE,
