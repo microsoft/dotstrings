@@ -130,7 +130,8 @@ def normalize(
                               an exception instead
     :param sort_comments: By default comments will be sorted in alphabetical
                           order. However, if you use linebreaks in your comments
-                          you will wish to turn this off.
+                          you will wish to turn this off. It also removes
+                          duplicates.
     """
 
     entries = load(strings_path)
@@ -154,6 +155,7 @@ def normalize(
 
     if sort_comments:
         for entry in deduped_entries:
+            entry.comments = list(set(entry.comments))
             entry.comments.sort()
 
     if output_path is None:
