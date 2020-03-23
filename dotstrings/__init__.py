@@ -105,7 +105,7 @@ def load_all_strings(strings_folder: str) -> LocalizedBundle:
 
     results = {}
 
-    for language in languages:
+    for language in sorted(languages):
         results[language] = load_language_tables(strings_folder, language)
 
     return LocalizedBundle(results)
