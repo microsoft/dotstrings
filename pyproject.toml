@@ -17,7 +17,7 @@ homepage = "https://github.com/Microsoft/dotstrings"
 keywords = ['localization', 'iOS', 'macOS', 'strings']
 
 classifiers = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: Console',
     'Environment :: MacOS X',
     'Intended Audience :: Developers',
