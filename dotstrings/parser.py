@@ -8,10 +8,10 @@ from typing import List, Match, Optional, TextIO, Tuple, Union
 from dotstrings.dot_strings_entry import DotStringsEntry
 
 
-_ENTRY_REGEX = r'^"(.+)"\s?=\s?"(.+)";$'
+_ENTRY_REGEX = r'^"(.+)"\s?=\s?"(.*)";$'
 _ENTRY_PATTERN = re.compile(_ENTRY_REGEX)
 
-_NS_ENTRY_REGEX = r'^(NS[^ ]+)\s?=\s?"(.+)";$'
+_NS_ENTRY_REGEX = r'^(NS[^ ]+)\s?=\s?"(.*)";$'
 _NS_ENTRY_PATTERN = re.compile(_NS_ENTRY_REGEX)
 
 
