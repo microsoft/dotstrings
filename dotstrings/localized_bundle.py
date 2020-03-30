@@ -102,7 +102,7 @@ class LocalizedBundle:
             sentinel = object()
             table_data = table_map.get(table, sentinel)
 
-            if table_data is sentinel and not allow_missing:
+            if table_data is sentinel and not allow_missing and language != "Base":
                 raise Exception(f"Could not find table {table} for language {language}")
 
             results[language] = cast(List[LocalizedString], table_data)
