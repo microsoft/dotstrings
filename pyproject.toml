@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dotstrings"
-version = "1.0.1"
+version = "1.0.2"
 description = "Tools for dealing with the .strings files for iOS and macOS"
 
 license = "MIT"
