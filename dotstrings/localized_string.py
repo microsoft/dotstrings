@@ -110,7 +110,7 @@ class LocalizedString:
         if self.language != "en":
             raise Exception(f"This should only be called for English strings: {self}")
         return (
-            f"NSLocalizedStringWithDefaultValue("
+            "NSLocalizedStringWithDefaultValue("
             + f'@"{self.key}", @"{self.table}", @"{self.bundle}", @"{self.value}", @"{self.comment}");'
         )
 

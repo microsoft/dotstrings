@@ -21,7 +21,7 @@ def _convert_to_utf8(file_path: str) -> None:
 
     iconv_command = f'iconv -f UTF-16 -t UTF-8 "{file_path}" > "{temp_file_path}"'
 
-    if subprocess.run(iconv_command, shell=True).returncode != 0:
+    if subprocess.run(iconv_command, shell=True, check=False).returncode != 0:
         raise Exception("Unable to convert from UTF-16 to UTF-8!")
 
     shutil.move(temp_file_path, file_path)
@@ -100,7 +100,7 @@ def generate_strings(
             if len(output) > 0:
                 raise Exception(f"Encountered an error generating strings: {output}")
         except subprocess.CalledProcessError as ex:
-            raise Exception(f"Unable generate .strings files! {ex}")
+            raise Exception(f"Unable generate .strings files! {ex}") from ex
 
     # Convert all .strings files to UTF-8
     for file_name in os.listdir(english_strings_directory):

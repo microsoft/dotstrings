@@ -104,7 +104,8 @@ class LocalizedBundle:
 
             if table_data is sentinel and language == "Base":
                 continue
-            elif table_data is sentinel and not allow_missing:
+
+            if table_data is sentinel and not allow_missing:
                 raise Exception(f"Could not find table {table} for language {language}")
 
             results[language] = cast(List[LocalizedString], table_data)
