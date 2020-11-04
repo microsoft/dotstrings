@@ -1,18 +1,57 @@
-#!/usr/bin/env python3
-
 """Utilities for dealing with .strings files"""
 
 import re
-from typing import List, Match, Optional, TextIO, Tuple, Union
+from typing import List, Optional, Pattern, TextIO, Union
 
 from dotstrings.dot_strings_entry import DotStringsEntry
 
 
-_ENTRY_REGEX = r'^"(.+)"\s?=\s?"(.*)";$'
-_ENTRY_PATTERN = re.compile(_ENTRY_REGEX)
+class Patterns:
+    """The patterns used by the parser."""
 
-_NS_ENTRY_REGEX = r'^(NS[^ ]+)\s?=\s?"(.*)";$'
-_NS_ENTRY_PATTERN = re.compile(_NS_ENTRY_REGEX)
+    comment = re.compile(r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE)
+    whitespace = re.compile(r"\s*", re.MULTILINE)
+    entry = re.compile(r'"(.*)" = "(.*)";')
+
+
+class Scanner:
+    """Regex string scanner."""
+
+    string: str
+    offset: int
+
+    def __init__(self, string: str) -> None:
+        self.string = string
+        self.offset = 0
+
+    def has_more(self) -> bool:
+        """Check if there is more string remaining.
+
+        :returns: True if there is more string remaining, False otherwise
+        """
+        return self.offset < len(self.string)
+
+    def scan(self, pattern: Union[str, Pattern], flags: int = 0) -> Optional[str]:
+        """Scan a string for a pattern and return the string if found.
+
+        :param pattern: The pattern to scan for
+        :param flags: Any flags to use for a string pattern
+
+        :returns: The string if the pattern matches, None otherwise.
+        """
+
+        if isinstance(pattern, str):
+            _pattern = re.compile(pattern, flags)
+        else:
+            _pattern = pattern
+
+        match = _pattern.match(self.string, self.offset)
+
+        if match is not None:
+            self.offset = match.end()
+            return match.group(0)
+
+        return None
 
 
 def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> List[DotStringsEntry]:
@@ -60,119 +99,57 @@ def loads(contents: str) -> List[DotStringsEntry]:
         raise Exception("Strings contain CRLF")
     contents = contents.replace("\r\n", "\n")
 
-    # Let's split so that we have a single item and it's comments together
-    entries = contents.split('";')
+    scanner = Scanner(contents)
 
-    # Remove any empty entries
-    entries = [entry for entry in entries if len(entry.strip()) > 0]
+    strings = []
 
-    # Add the splitter back on the end
-    entries = [entry + '";' for entry in entries]
+    # Main parse loop
+    while scanner.has_more():
+        # Clear any whitespace
+        _ = scanner.scan(Patterns.whitespace)
 
-    parsed_entries: List[DotStringsEntry] = []
+        comments = []
 
-    # Now we can work on parsing them one by one
-    for entry in entries:
-        parsed_entries.append(_parse_entry(entry))
+        # Get any comment
+        while True:
+            comment = scanner.scan(Patterns.comment)
 
-    return parsed_entries
+            # If there wasn't a comment, we can finish trying and move on
+            if comment is None:
+                break
 
+            # Clear out the comment syntax
+            if comment.startswith("//"):
+                comment = comment.replace("//", "", 1)
+            elif comment.startswith("/*"):
+                comment = comment.replace("/*", "", 1)
+                comment = comment[::-1].replace("/*", "", 1)[::-1]
 
-def _find_entry(entry_lines: List[str]) -> Tuple[int, Optional[Match]]:
-    """Search for the entry in some entry lines
+            comment = comment.strip()
 
-    :param entry_lines: The lines for an entry from a .strings file (including comments)
+            # Split any multi-line comments
+            components = [c.strip() for c in comment.split("\n")]
+            comments.extend(components)
 
-    :returns: A tuple with the index of the match and the match itself
-    """
+            # Pull out any whitespace
+            _ = scanner.scan(Patterns.whitespace)
 
-    for index, line in enumerate(entry_lines):
+        # Get the entry line
+        entry = scanner.scan(Patterns.entry)
 
-        # Naive checks to avoid doing a regex if we don't have to
-        if len(line) == 0:
-            continue
+        if entry is None:
+            if scanner.has_more():
+                raise Exception(f"Expected an entry at offset {scanner.offset}")
+            break
 
-        if len(line.strip()) == 0:
-            continue
+        # Now extract the key and value
+        entry_matches = Patterns.entry.search(entry)
+        if not entry_matches:
+            raise Exception(f"Failed to parse entry at offset {scanner.offset}")
 
-        if line.startswith(" "):
-            continue
+        key = entry_matches.group(1)
+        value = entry_matches.group(2)
 
-        match = _ENTRY_PATTERN.match(line)
-        if match:
-            return index, match
+        strings.append(DotStringsEntry(key, value, comments))
 
-        # We didn't match so try the NS entry one
-        match = _NS_ENTRY_PATTERN.match(line)
-        if match:
-            return index, match
-
-    return 0, None
-
-
-def _parse_entry(entry: str) -> DotStringsEntry:
-    """Parse a single entry in a .strings file and its comments.
-
-    :param entry: A single entry from a .strings file
-
-    :returns: A parsed entry value
-
-    :raises Exception: If we fail to parse the entry
-    """
-
-    # pylint: disable=too-many-branches
-
-    lines = entry.split("\n")
-
-    entry_index, entry_match = _find_entry(lines)
-
-    # If we didn't find it, then that's a problem
-    if entry_match is None:
-        raise Exception("Failed to find key and value in entry:\n" + entry)
-
-    # We also expect it to be the last line, so if it's not, then that's a problem too
-    if entry_index != len(lines) - 1:
-        raise Exception("Found key and value in an unexpected position in entry:\n" + entry)
-
-    # We now have the key and value
-    key = entry_match.group(1)
-    value = entry_match.group(2)
-
-    # Just the comment to go
-
-    # We already know the key and value were on the last line, so let's drop it
-    lines = lines[:-1]
-
-    comment = ""
-    in_comment = False
-
-    for line in lines:
-
-        if not in_comment and "/*" in line:
-            in_comment = True
-
-        if not in_comment:
-            continue
-
-        if line.strip().startswith("/*"):
-            line = line.replace("/*", "")
-
-        if line.strip().endswith("*/"):
-            line = line.replace("*/", "")
-
-        comment += line.strip() + "\n"
-
-        if "*/" in line:
-            in_comment = False
-
-    # If we didn't find any comment, set it to None
-    if len(comment) == 0:
-        return DotStringsEntry(key, value, [])
-
-    comments = comment.split("\n")
-    comments = [comment.strip() for comment in comments]
-    comments = [comment for comment in comments if len(comment) > 0]
-
-    return DotStringsEntry(key, value, comments)
-
-    # pylint: enable=too-many-branches
+    return strings

@@ -46,7 +46,7 @@ class SimpleTests(unittest.TestCase):
 
         self.assertEqual(entries[0].key, "One")
         self.assertEqual(entries[0].value, "1")
-        self.assertEqual(entries[0].comments, ["Multi-line", "comment"])
+        self.assertEqual(entries[0].comments, ["More comment", "Multi-line", "comment"])
 
         self.assertEqual(entries[1].key, "Two")
         self.assertEqual(entries[1].value, "2")
