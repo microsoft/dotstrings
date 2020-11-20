@@ -93,6 +93,7 @@ def generate_strings(
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                errors="backslashreplace",
             ).stdout
 
             output = output.strip()
