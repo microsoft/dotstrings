@@ -87,14 +87,20 @@ def generate_strings(
         genstrings_command.extend(current_files)
 
         try:
-            output = subprocess.run(
+            output_bytes = subprocess.run(
                 genstrings_command,
-                universal_newlines=True,
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                errors="backslashreplace",
             ).stdout
+
+            # We decode here rather than in the subprocess call because it seems
+            # that extractLocStrings can occasionally flush its buffer without
+            # writing the entirety of a character out. When that happens, the
+            # text wrapper tries to decode it and fails. By buffering all bytes
+            # until the end of the command and then decoding, we avoid this
+            # issue.
+            output = output_bytes.decode("utf-8", errors="backslashreplace")
 
             output = output.strip()
 
