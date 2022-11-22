@@ -3,8 +3,9 @@
 import os
 from typing import Dict, List, Optional, Set
 
-from dotstrings.parser import load, loads
+from dotstrings.parser import load, loads, load_plist, loads_plist
 from dotstrings.dot_strings_entry import DotStringsEntry
+from dotstrings.dot_stringsdict_entry import DotStringsDictEntry, Variable
 from dotstrings.localized_bundle import LocalizedBundle
 from dotstrings.localized_string import LocalizedString
 

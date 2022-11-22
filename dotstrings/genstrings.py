@@ -70,6 +70,9 @@ def generate_strings(
     # Empty existing strings
     if clear_existing:
         for table in os.listdir(english_strings_directory):
+            # Do not clear non .strings files
+            if not table.endswith(".strings"):
+                continue
             with open(
                 os.path.join(english_strings_directory, table), "w", encoding="utf-8"
             ) as table_file:
