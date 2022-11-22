@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>i_have_cats_and_dogs</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>I have %#@catCount@ and %#@dogCount@</string>
+		<key>catCount</key>
+		<dict>
+			<key>other</key>
+			<string>%d cats</string>
+			<key>one</key>
+			<string>a cat</string>
+			<key>zero</key>
+			<string>no cat</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+		</dict>
+		<key>dogCount</key>
+		<dict>
+			<key>other</key>
+			<string>%d dogs</string>
+			<key>one</key>
+			<string>a dog</string>
+			<key>zero</key>
+			<string>no dog</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+		</dict>
+	</dict>
+	<key>i_ate_apples_and_bananas</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>I ate %#@appleCount@ and %#@bananaCount@</string>
+		<key>appleCount</key>
+		<dict>
+			<key>other</key>
+			<string>%d apples</string>
+			<key>one</key>
+			<string>an apple</string>
+			<key>zero</key>
+			<string>no apple</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+		</dict>
+		<key>bananaCount</key>
+		<dict>
+			<key>other</key>
+			<string>%d bananas</string>
+			<key>one</key>
+			<string>a banana</string>
+			<key>zero</key>
+			<string>no banana</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

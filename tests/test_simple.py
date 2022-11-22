@@ -17,6 +17,7 @@ class SimpleTests(unittest.TestCase):
         current_file_path = os.path.abspath(__file__)
         current_folder_path = os.path.dirname(current_file_path)
         self.strings_path = os.path.abspath(os.path.join(current_folder_path, "strings_files"))
+        self.stringsdict_path = os.path.abspath(os.path.join(current_folder_path, "stringsdict_files"))
 
     def test_single_string(self):
         """Test that a single string load works."""
@@ -59,3 +60,22 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(entries[3].key, "Four")
         self.assertEqual(entries[3].value, "4")
         self.assertEqual(entries[3].comments, ["No line break comment"])
+
+    def test_stringsdict(self):
+        """Test that stringsdict load works."""
+        stringsdict_file_path = os.path.join(self.stringsdict_path, "example.stringsdict")
+        entries = dotstrings.load_plist(stringsdict_file_path)
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0].key, "i_have_cats_and_dogs")
+        self.assertEqual(entries[0].value, "I have %#@catCount@ and %#@dogCount@")
+        self.assertEqual(len(entries[0].variables), 2)
+
+        variables = entries[0].variables
+        catVariable = variables.get("catCount")
+        self.assertIsNotNone(catVariable)
+
+        self.assertEqual(catVariable.value_type, "d")
+        self.assertEqual(catVariable.zero_value, "no cat")
+        self.assertEqual(catVariable.one_value, "a cat")
+        self.assertEqual(catVariable.other_value, "%d cats")
