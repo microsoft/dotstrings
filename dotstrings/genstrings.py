@@ -70,7 +70,9 @@ def generate_strings(
     # Empty existing strings
     if clear_existing:
         for table in os.listdir(english_strings_directory):
-            with open(os.path.join(english_strings_directory, table), "w") as table_file:
+            with open(
+                os.path.join(english_strings_directory, table), "w", encoding="utf-8"
+            ) as table_file:
                 table_file.write("")
 
     # We can't pass in too many files on the command line or the argument list

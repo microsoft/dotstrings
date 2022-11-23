@@ -161,7 +161,7 @@ def normalize(
     if output_path is None:
         output_path = strings_path
 
-    with open(output_path, "w") as strings_file:
+    with open(output_path, "w", encoding="utf-8") as strings_file:
         for entry in deduped_entries:
             strings_file.write(entry.strings_format())
             strings_file.write("\n\n")
