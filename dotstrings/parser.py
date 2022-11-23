@@ -5,7 +5,7 @@ import re
 from typing import BinaryIO, List, Optional, Pattern, TextIO, Union
 
 from dotstrings.dot_strings_entry import DotStringsEntry
-from dotstrings.dot_stringsdict_entry import DotStringsDictEntry, Variable, FORMAT_KEY, VARIABLE_VALUE_SPEC_KEY, VARIABLE_VALUE_SPEC_PLURAL, VARIABLE_VALUE_TYPE_KEY
+from dotstrings.dot_stringsdict_entry import DotStringsDictEntry
 
 
 class Patterns:
@@ -156,7 +156,7 @@ def loads(contents: str) -> List[DotStringsEntry]:
 
     return strings
 
-def load_plist(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
+def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
     """Parse the contents of a .stringsdict file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -167,13 +167,13 @@ def load_plist(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
     # If it's a file pointer, read in the contents and parse
     if not isinstance(file_details, str):
         contents = file_details.read()
-        return loads_plist(contents)
+        return loads_dict(contents)
 
     with open(file_details, "rb") as stringsdict_file:
-        return load_plist(stringsdict_file)
+        return load_dict(stringsdict_file)
 
-def loads_plist(contents: bytes) -> List[DotStringsDictEntry]:
-    strings_dict = plistlib.loads(contents, fmt=plistlib.FMT_XML)
+def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
+    strings_dict = plistlib.loads(contents)
 
     if not isinstance(strings_dict, dict):
         raise Exception(f"stringsdict format is incorrect")
@@ -183,17 +183,6 @@ def loads_plist(contents: bytes) -> List[DotStringsDictEntry]:
         if not isinstance(entry, dict):
             raise Exception(f"stringsdict entry format is incorrect")
 
-        if FORMAT_KEY not in entry:
-            raise Exception(f"NSStringLocalizedFormatKey missing in entry")
+        entries.append(DotStringsDictEntry.parse(key, entry))
 
-        format = entry[FORMAT_KEY]
-
-        variables = {}
-        for variable_name, variable_entry in entry.items():
-            if variable_name == FORMAT_KEY:
-                # Ignore the format key
-                continue
-            variables[variable_name] = Variable(contents=variable_entry)
-
-        entries.append(DotStringsDictEntry(key, format, variables))
     return entries

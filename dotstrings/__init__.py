@@ -3,7 +3,7 @@
 import os
 from typing import Dict, List, Optional, Set
 
-from dotstrings.parser import load, loads, load_plist, loads_plist
+from dotstrings.parser import load, loads, load_dict, loads_dict
 from dotstrings.dot_strings_entry import DotStringsEntry
 from dotstrings.dot_stringsdict_entry import DotStringsDictEntry, Variable
 from dotstrings.localized_bundle import LocalizedBundle
@@ -33,6 +33,19 @@ def strings_file_path(strings_folder: str, language: str, table_name: str) -> st
     :returns: The path to the strings file
     """
     return os.path.join(language_folder_path(strings_folder, language), f"{table_name}.strings")
+
+
+def stringsdict_file_path(stringsdict_folder: str, language: str, table_name: str) -> str:
+    """Generate the .stringsdict file path from the details supplied.
+
+    :param stringsdict_folder: The location of the strings folder (which contains
+                               all the *.lproj folders)
+    :param language: The language code for the file
+    :param table_name: The name of the table (file name)
+
+    :returns: The path to the strings file
+    """
+    return os.path.join(language_folder_path(stringsdict_folder, language), f"{table_name}.stringsdict")
 
 
 def languages_in_folder(strings_folder: str) -> Set[str]:

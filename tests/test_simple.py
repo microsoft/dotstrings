@@ -64,7 +64,7 @@ class SimpleTests(unittest.TestCase):
     def test_stringsdict(self):
         """Test that stringsdict load works."""
         stringsdict_file_path = os.path.join(self.stringsdict_path, "example.stringsdict")
-        entries = dotstrings.load_plist(stringsdict_file_path)
+        entries = dotstrings.load_dict(stringsdict_file_path)
         self.assertEqual(len(entries), 2)
 
         self.assertEqual(entries[0].key, "i_have_cats_and_dogs")
