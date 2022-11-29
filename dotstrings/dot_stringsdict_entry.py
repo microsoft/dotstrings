@@ -8,6 +8,7 @@ FORMAT_KEY = "NSStringLocalizedFormatKey"
 
 VARIABLE_VALUE_SPEC_PLURAL = "NSStringPluralRuleType"
 
+
 class Variable:
     """Represents a .stringsdict entry variable.
 
@@ -38,7 +39,7 @@ class Variable:
         self.other_value = None
 
     @staticmethod
-    def parse(contents: dict) -> 'Variable':
+    def parse(contents: dict) -> "Variable":
         """Parsing a stringsdict variable entry
 
         :param contents: The contents of the entry
@@ -56,7 +57,7 @@ class Variable:
 
         # When initializing from a dict (parsing), be sure NSStringFormatValueTypeKey exists
         if VARIABLE_VALUE_TYPE_KEY not in contents:
-           raise Exception("NSStringFormatValueTypeKey missing in entry")
+            raise Exception("NSStringFormatValueTypeKey missing in entry")
 
         variable.value_type = contents[VARIABLE_VALUE_TYPE_KEY]
 
@@ -74,15 +75,17 @@ class Variable:
 
         :returns: A raw representation of the object
         """
-        return str({
-            "value_type": self.value_type,
-            "zero_value": self.zero_value,
-            "one_value": self.one_value,
-            "two_value": self.two_value,
-            "few_value": self.few_value,
-            "many_value": self.many_value,
-            "other_value": self.other_value,
-        })
+        return str(
+            {
+                "value_type": self.value_type,
+                "zero_value": self.zero_value,
+                "one_value": self.one_value,
+                "two_value": self.two_value,
+                "few_value": self.few_value,
+                "many_value": self.many_value,
+                "other_value": self.other_value,
+            }
+        )
 
     def __str__(self) -> str:
         """Generate and return the string representation of the object.
@@ -90,6 +93,7 @@ class Variable:
         :return: A string representation of the object
         """
         return self.__repr__()
+
 
 class DotStringsDictEntry:
     """Represents a .stringsdict entry.
@@ -136,9 +140,8 @@ class DotStringsDictEntry:
 
         return result
 
-    def merge(self, another: 'DotStringsDictEntry') -> None:
-        """Merge value from another entry. Values from another entry is preferred
-        """
+    def merge(self, another: "DotStringsDictEntry") -> None:
+        """Merge value from another entry. Values from another entry is preferred"""
 
         # We only need to merge variables as key, value should be the same
         for key, variable in self.variables.items():
@@ -153,7 +156,7 @@ class DotStringsDictEntry:
                 variable.other_value = another_variable.other_value
 
     @staticmethod
-    def parse(key: str, contents: dict) -> 'DotStringsDictEntry':
+    def parse(key: str, contents: dict) -> "DotStringsDictEntry":
         """Parsing a stringsdict entry
 
         :param key: The key of the entry

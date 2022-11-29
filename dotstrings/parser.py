@@ -156,6 +156,7 @@ def loads(contents: str) -> List[DotStringsEntry]:
 
     return strings
 
+
 def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
     """Parse the contents of a .stringsdict file from a file pointer.
 
@@ -171,6 +172,7 @@ def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
 
     with open(file_details, "rb") as stringsdict_file:
         return load_dict(stringsdict_file)
+
 
 def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
     strings_dict = plistlib.loads(contents)

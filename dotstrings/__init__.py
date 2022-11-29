@@ -45,7 +45,9 @@ def stringsdict_file_path(stringsdict_folder: str, language: str, table_name: st
 
     :returns: The path to the strings file
     """
-    return os.path.join(language_folder_path(stringsdict_folder, language), f"{table_name}.stringsdict")
+    return os.path.join(
+        language_folder_path(stringsdict_folder, language), f"{table_name}.stringsdict"
+    )
 
 
 def languages_in_folder(strings_folder: str) -> Set[str]:
