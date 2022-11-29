@@ -104,9 +104,9 @@ class DotStringsDictEntry:
 
     key: str
     value: str
-    variables: dict[str, Variable]
+    variables: dict
 
-    def __init__(self, key: str, value: str, variables: dict[str, Variable]) -> None:
+    def __init__(self, key: str, value: str, variables: dict) -> None:
         self.key = key
         self.value = value
         self.variables = variables
@@ -167,7 +167,7 @@ class DotStringsDictEntry:
         if FORMAT_KEY not in contents:
             raise Exception("NSStringLocalizedFormatKey missing in entry")
 
-        format = contents[FORMAT_KEY]
+        entry_format = contents[FORMAT_KEY]
 
         variables = {}
         for variable_name, variable_entry in contents.items():
@@ -176,7 +176,7 @@ class DotStringsDictEntry:
                 continue
             variables[variable_name] = Variable.parse(variable_entry)
 
-        return DotStringsDictEntry(key, format, variables)
+        return DotStringsDictEntry(key, entry_format, variables)
 
     def __repr__(self) -> str:
         """Returns a raw representation of the object which can be used to reconstruct it later.

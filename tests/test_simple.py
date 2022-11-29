@@ -72,10 +72,10 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(len(entries[0].variables), 2)
 
         variables = entries[0].variables
-        catVariable = variables.get("catCount")
-        self.assertIsNotNone(catVariable)
+        cat_variable = variables.get("catCount")
+        self.assertIsNotNone(cat_variable)
 
-        self.assertEqual(catVariable.value_type, "d")
-        self.assertEqual(catVariable.zero_value, "no cat")
-        self.assertEqual(catVariable.one_value, "a cat")
-        self.assertEqual(catVariable.other_value, "%d cats")
+        self.assertEqual(cat_variable.value_type, "d")
+        self.assertEqual(cat_variable.zero_value, "no cat")
+        self.assertEqual(cat_variable.one_value, "a cat")
+        self.assertEqual(cat_variable.other_value, "%d cats")

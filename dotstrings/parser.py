@@ -175,15 +175,22 @@ def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
 
 
 def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
+    """Parse the contents of a .stringsdict file from binary data.
+
+    :param contents: The binary data of a .stringsdict file
+
+    :returns: A list of `DotStringEntry`s
+    """
+
     strings_dict = plistlib.loads(contents)
 
     if not isinstance(strings_dict, dict):
-        raise Exception(f"stringsdict format is incorrect")
+        raise Exception("stringsdict format is incorrect")
 
     entries = []
     for key, entry in strings_dict.items():
         if not isinstance(entry, dict):
-            raise Exception(f"stringsdict entry format is incorrect")
+            raise Exception("stringsdict entry format is incorrect")
 
         entries.append(DotStringsDictEntry.parse(key, entry))
 
