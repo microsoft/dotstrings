@@ -1,9 +1,11 @@
 """Utilities for dealing with .strings files"""
 
+import plistlib
 import re
-from typing import List, Optional, Pattern, TextIO, Union
+from typing import BinaryIO, List, Optional, Pattern, TextIO, Union
 
 from dotstrings.dot_strings_entry import DotStringsEntry
+from dotstrings.dot_stringsdict_entry import DotStringsDictEntry
 
 
 class Patterns:
@@ -153,3 +155,43 @@ def loads(contents: str) -> List[DotStringsEntry]:
         strings.append(DotStringsEntry(key, value, comments))
 
     return strings
+
+
+def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
+    """Parse the contents of a .stringsdict file from a file pointer.
+
+    :param file_details: The file pointer or a file path
+
+    :returns: A list of `DotStringEntry`s
+    """
+
+    # If it's a file pointer, read in the contents and parse
+    if not isinstance(file_details, str):
+        contents = file_details.read()
+        return loads_dict(contents)
+
+    with open(file_details, "rb") as stringsdict_file:
+        return load_dict(stringsdict_file)
+
+
+def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
+    """Parse the contents of a .stringsdict file from binary data.
+
+    :param contents: The binary data of a .stringsdict file
+
+    :returns: A list of `DotStringEntry`s
+    """
+
+    strings_dict = plistlib.loads(contents)
+
+    if not isinstance(strings_dict, dict):
+        raise Exception("stringsdict format is incorrect")
+
+    entries = []
+    for key, entry in strings_dict.items():
+        if not isinstance(entry, dict):
+            raise Exception("stringsdict entry format is incorrect")
+
+        entries.append(DotStringsDictEntry.parse(key, entry))
+
+    return entries
