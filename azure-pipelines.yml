@@ -30,37 +30,35 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  - script: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-    displayName: Install Poetry
-
-  - script: python -m venv $(System.DefaultWorkingDirectory)
+  - script: python3 -m venv $(System.DefaultWorkingDirectory)
     displayName: Create virtual environment
 
   - script: |
       source bin/activate
-      $HOME/.poetry/bin/poetry install
-    displayName: 'Install dependencies'
+      curl -sSL https://install.python-poetry.org | python3 -
+      $HOME/.local/bin/poetry install
+    displayName: 'Install Poetry'
 
   - script: |
       source bin/activate
-      python -m black -l 100 --check dotstrings/*.py
+      python3 -m black -l 100 --check dotstrings/*.py
     displayName: 'Format Check (Black)'
 
   - script: |
       source bin/activate
-      python -m pylint --rcfile=pylintrc dotstrings
-      python -m pylint --rcfile=pylintrc tests
+      python3 -m pylint --rcfile=pylintrc dotstrings
+      python3 -m pylint --rcfile=pylintrc tests
     displayName: 'Lint'
 
   - script: |
       source bin/activate
-      python -m mypy --ignore-missing-imports dotstrings/
-      python -m mypy --ignore-missing-imports tests/
+      python3 -m mypy --ignore-missing-imports dotstrings/
+      python3 -m mypy --ignore-missing-imports tests/
     displayName: 'Type Check'
 
   - script: |
       source bin/activate
-      python -m pytest tests --cov=dotstrings --cov-report xml --doctest-modules --junitxml=junit/test-results.xml
+      python3 -m pytest tests --cov=dotstrings --cov-report xml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
 
   - task: PublishTestResults@2
