@@ -79,3 +79,13 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(cat_variable.zero_value, "no cat")
         self.assertEqual(cat_variable.one_value, "a cat")
         self.assertEqual(cat_variable.other_value, "%d cats")
+
+    def test_strings_format(self):
+        """Test that .strings formatting works."""
+        strings_file_path = os.path.join(self.strings_path, "randomized.strings")
+        entries = dotstrings.load(strings_file_path)
+
+        self.assertEqual(entries[0].strings_format(), '/* This is a\n   multiline comment */\n"carry" = "breathe";')
+        self.assertEqual(entries[1].strings_format(), '/* This is another\n   multiline comment, but for a dupe */\n"condition" = "outgoing";')
+        self.assertEqual(entries[2].strings_format(), '/* precious */\n"condition" = "outgoing";')
+        
