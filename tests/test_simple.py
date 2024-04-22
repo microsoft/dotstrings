@@ -2,12 +2,12 @@
 
 # pylint: disable=line-too-long
 
+import dotstrings
 import os
 import sys
 import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..")))
-import dotstrings
 
 
 class SimpleTests(unittest.TestCase):
@@ -79,3 +79,18 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(cat_variable.zero_value, "no cat")
         self.assertEqual(cat_variable.one_value, "a cat")
         self.assertEqual(cat_variable.other_value, "%d cats")
+
+    def test_string_with_uneven_whitespace(self):
+        """Test that string with uneven whitespaces work"""
+        string_with_uneven_whitespace_path = os.path.join(self.strings_path, "string_with_uneven_whitespace.strings")
+        entries = dotstrings.load(string_with_uneven_whitespace_path)
+        self.assertEqual(len(entries), 3)
+
+        self.assertEqual(entries[0].key, "This is a key")
+        self.assertEqual(entries[0].value, "This is a value")
+
+        self.assertEqual(entries[1].key, "This is also a key")
+        self.assertEqual(entries[1].value, "This is also a value")
+
+        self.assertEqual(entries[2].key, "This is again a key")
+        self.assertEqual(entries[2].value, "This is again a value")
