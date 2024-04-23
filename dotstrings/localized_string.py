@@ -33,9 +33,9 @@ class LocalizedString:
     :param str bundle: The bundle the string can be found in
     """
 
-    _TOKEN_REGEX: ClassVar[
-        str
-    ] = r"(%(?:[0-9]+\$)?[0-9]*\.?[0-9]*[a-zA-Z]{0,2}[dDuUxXoOfFeEgGcCsSaAp@])"
+    _TOKEN_REGEX: ClassVar[str] = (
+        r"(%(?:[0-9]+\$)?[0-9]*\.?[0-9]*[a-zA-Z]{0,2}[dDuUxXoOfFeEgGcCsSaAp@])"
+    )
     _TOKEN_PATTERN: ClassVar[Pattern] = re.compile(_TOKEN_REGEX, flags=re.DOTALL)
 
     key: str
