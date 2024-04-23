@@ -2,6 +2,7 @@
 
 from typing import cast, Dict, List, Set
 
+from dotstrings.exceptions import DotStringsException
 from dotstrings.localized_string import LocalizedString
 
 
@@ -50,13 +51,13 @@ class LocalizedBundle:
                 missing_tables = base_language_tables - table_names
 
                 if len(extra_tables) > 0:
-                    raise Exception(
+                    raise DotStringsException(
                         f"The following table names were in {language}"
                         + f" but not in {base_language}: {extra_tables}"
                     )
 
                 if len(missing_tables) > 0:
-                    raise Exception(
+                    raise DotStringsException(
                         f"The following table names were in {base_language}"
                         + f" but not in {language}: {missing_tables}"
                     )
@@ -82,7 +83,7 @@ class LocalizedBundle:
         result = self.raw_entries.get(language, sentinel)
 
         if result is sentinel:
-            raise Exception(f"There were no entries for language: {language}")
+            raise DotStringsException(f"There were no entries for language: {language}")
 
         return cast(Dict[str, List[LocalizedString]], result)
 
@@ -106,7 +107,7 @@ class LocalizedBundle:
                 continue
 
             if table_data is sentinel and not allow_missing:
-                raise Exception(f"Could not find table {table} for language {language}")
+                raise DotStringsException(f"Could not find table {table} for language {language}")
 
             results[language] = cast(List[LocalizedString], table_data)
 

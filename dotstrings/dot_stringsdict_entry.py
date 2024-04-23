@@ -1,6 +1,7 @@
 """Base types for the dotstrings library."""
 
 from typing import Optional
+from dotstrings.exceptions import DotStringsException
 
 VARIABLE_VALUE_TYPE_KEY = "NSStringFormatValueTypeKey"
 VARIABLE_VALUE_SPEC_KEY = "NSStringFormatSpecTypeKey"
@@ -50,14 +51,16 @@ class Variable:
 
         variable = Variable()
         if VARIABLE_VALUE_SPEC_KEY not in contents:
-            raise Exception("NSStringFormatSpecTypeKey missing in entry")
+            raise DotStringsException("NSStringFormatSpecTypeKey missing in entry")
 
         if contents[VARIABLE_VALUE_SPEC_KEY] != VARIABLE_VALUE_SPEC_PLURAL:
-            raise Exception("Value of NSStringFormatSpecTypeKey is not NSStringPluralRuleType")
+            raise DotStringsException(
+                "Value of NSStringFormatSpecTypeKey is not NSStringPluralRuleType"
+            )
 
         # When initializing from a dict (parsing), be sure NSStringFormatValueTypeKey exists
         if VARIABLE_VALUE_TYPE_KEY not in contents:
-            raise Exception("NSStringFormatValueTypeKey missing in entry")
+            raise DotStringsException("NSStringFormatValueTypeKey missing in entry")
 
         variable.value_type = contents[VARIABLE_VALUE_TYPE_KEY]
 
@@ -116,7 +119,7 @@ class DotStringsDictEntry:
 
         :returns: The dict representation of this entry
         """
-        result = {}
+        result: dict[str, str | dict[str, str]] = {}
         result[FORMAT_KEY] = self.value
         for variable_name, variable in self.variables.items():
             variable_dict = {}
@@ -165,7 +168,7 @@ class DotStringsDictEntry:
         :returns: The parsed stringsdict entry
         """
         if FORMAT_KEY not in contents:
-            raise Exception("NSStringLocalizedFormatKey missing in entry")
+            raise DotStringsException("NSStringLocalizedFormatKey missing in entry")
 
         entry_format = contents[FORMAT_KEY]
 

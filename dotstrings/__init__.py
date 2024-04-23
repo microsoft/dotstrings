@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Set
 from dotstrings.parser import load, loads, load_dict, loads_dict
 from dotstrings.dot_strings_entry import DotStringsEntry
 from dotstrings.dot_stringsdict_entry import DotStringsDictEntry, Variable
+from dotstrings.exceptions import DotStringsException
 from dotstrings.localized_bundle import LocalizedBundle
 from dotstrings.localized_string import LocalizedString
 
@@ -165,7 +166,7 @@ def normalize(
         # If we have duplicate keys but the values don't match, that's an
         # exception, whether or not we are removing duplicates
         if deduped_entries[-1].value != entry.value or not remove_duplicates:
-            raise Exception(f"Found duplicate strings with key: {entry.key}")
+            raise DotStringsException(f"Found duplicate strings with key: {entry.key}")
 
         deduped_entries[-1].comments.extend(entry.comments)
 

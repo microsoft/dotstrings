@@ -5,6 +5,7 @@ import re
 from typing import ClassVar, List, Optional, Pattern
 
 from dotstrings.dot_strings_entry import DotStringsEntry
+from dotstrings.exceptions import DotStringsException
 
 
 class LocalizedString:
@@ -108,7 +109,7 @@ class LocalizedString:
         :raises Exception: If the language is not English
         """
         if self.language != "en":
-            raise Exception(f"This should only be called for English strings: {self}")
+            raise DotStringsException(f"This should only be called for English strings: {self}")
         return (
             "NSLocalizedStringWithDefaultValue("
             + f'@"{self.key}", @"{self.table}", @"{self.bundle}", @"{self.value}", @"{self.comment}");'

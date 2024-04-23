@@ -4,6 +4,7 @@ import plistlib
 import re
 from typing import BinaryIO, List, Optional, Pattern, TextIO, Union
 
+from dotstrings.exceptions import DotStringsException
 from dotstrings.dot_strings_entry import DotStringsEntry
 from dotstrings.dot_stringsdict_entry import DotStringsDictEntry
 
@@ -83,7 +84,7 @@ def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> Li
         except UnicodeDecodeError:
             pass
 
-    raise Exception(f"Could not determine encoding for file at path: {file_details}")
+    raise DotStringsException(f"Could not determine encoding for file at path: {file_details}")
 
 
 def loads(contents: str) -> List[DotStringsEntry]:
@@ -98,7 +99,7 @@ def loads(contents: str) -> List[DotStringsEntry]:
     # Sometimes we have CRLF. It's easier to just replace now. This could, in
     # theory, cause issues, but we just don't support it for now.
     if "\r\n" in contents:
-        raise Exception("Strings contain CRLF")
+        raise DotStringsException("Strings contain CRLF")
     contents = contents.replace("\r\n", "\n")
 
     scanner = Scanner(contents)
@@ -141,13 +142,13 @@ def loads(contents: str) -> List[DotStringsEntry]:
 
         if entry is None:
             if scanner.has_more():
-                raise Exception(f"Expected an entry at offset {scanner.offset}")
+                raise DotStringsException(f"Expected an entry at offset {scanner.offset}")
             break
 
         # Now extract the key and value
         entry_matches = Patterns.entry.search(entry)
         if not entry_matches:
-            raise Exception(f"Failed to parse entry at offset {scanner.offset}")
+            raise DotStringsException(f"Failed to parse entry at offset {scanner.offset}")
 
         key = entry_matches.group(1)
         value = entry_matches.group(2)
@@ -185,12 +186,12 @@ def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
     strings_dict = plistlib.loads(contents)
 
     if not isinstance(strings_dict, dict):
-        raise Exception("stringsdict format is incorrect")
+        raise DotStringsException("stringsdict format is incorrect")
 
     entries = []
     for key, entry in strings_dict.items():
         if not isinstance(entry, dict):
-            raise Exception("stringsdict entry format is incorrect")
+            raise DotStringsException("stringsdict entry format is incorrect")
 
         entries.append(DotStringsDictEntry.parse(key, entry))
 
