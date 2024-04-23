@@ -47,6 +47,7 @@ class LocalizedString:
     key_extension: str | None
     bundle: str
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -69,6 +70,8 @@ class LocalizedString:
             self.key = key
         else:
             self.key = LocalizedString._calculate_key(value=value, key_extension=key_extension)
+
+    # pylint: enable=too-many-arguments
 
     @staticmethod
     def _calculate_key(*, value: str, key_extension: str | None) -> str:
