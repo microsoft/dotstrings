@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import List
 
 from dotstrings.exceptions import DotStringsException
 
@@ -30,7 +29,7 @@ def _convert_to_utf8(file_path: str) -> None:
 
 
 def generate_strings(
-    *, output_directory: str, file_paths: List[str], clear_existing: bool = True
+    *, output_directory: str, file_paths: list[str], clear_existing: bool = True
 ) -> None:
     """Run the genstrings command over the files passed in.
 
@@ -55,7 +54,7 @@ def generate_strings(
 
     :param str output_directory: The location to place the output files (this
                                  folder will contain an en.lproj folder after)
-    :param List[str] file_paths: The paths to the files that should be scanned
+    :param list[str] file_paths: The paths to the files that should be scanned
     :param bool clear_existing: Set to True when the existing files in the
                                 output directory should be wiped before
                                 generating the new strings. Defaults to True.

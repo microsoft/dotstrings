@@ -2,7 +2,7 @@
 
 import hashlib
 import re
-from typing import ClassVar, List, Optional, Pattern
+from typing import ClassVar, Pattern
 
 from dotstrings.dot_strings_entry import DotStringsEntry
 from dotstrings.exceptions import DotStringsException
@@ -21,14 +21,14 @@ class LocalizedString:
     you may wish to automatically generate keys to avoid having to manually
     deal with deduplication.
 
-    :param Optional[str] key: The key for the string. If this is None, they key
+    :param str | None key: The key for the string. If this is None, they key
                               will be automatically derived from the value and
                               the key extension.
     :param str value: The value of the string
     :param str language: The language code of the string
     :param str table: The string table to use
-    :param Optional[str] comment: The comment for the string
-    :param Optional[str] key_extension: The key extension to differentiate
+    :param str | None comment: The comment for the string
+    :param str | None key_extension: The key extension to differentiate
                                         between identical strings with different
                                         meanings
     :param str bundle: The bundle the string can be found in
@@ -43,19 +43,19 @@ class LocalizedString:
     value: str
     language: str
     table: str
-    comment: Optional[str]
-    key_extension: Optional[str]
+    comment: str | None
+    key_extension: str | None
     bundle: str
 
     def __init__(
         self,
         *,
-        key: Optional[str],
+        key: str | None,
         value: str,
         language: str,
         table: str,
-        comment: Optional[str] = None,
-        key_extension: Optional[str] = None,
+        comment: str | None = None,
+        key_extension: str | None = None,
         bundle: str = "",
     ) -> None:
         self.value = value
@@ -71,7 +71,7 @@ class LocalizedString:
             self.key = LocalizedString._calculate_key(value=value, key_extension=key_extension)
 
     @staticmethod
-    def _calculate_key(*, value: str, key_extension: Optional[str]) -> str:
+    def _calculate_key(*, value: str, key_extension: str | None) -> str:
         """Calculate the unique key to use for this string.
 
         :param value: The value of the localized string
@@ -94,7 +94,7 @@ class LocalizedString:
 
         return key
 
-    def tokens(self) -> List[str]:
+    def tokens(self) -> list[str]:
         """Find and return the tokens in the string.
 
         :returns: The list of tokens in the string
@@ -187,11 +187,11 @@ class LocalizedString:
 
     @staticmethod
     def from_dotstring_entries(
-        *, entries: List[DotStringsEntry], language: str, table: str
-    ) -> List["LocalizedString"]:
+        *, entries: list[DotStringsEntry], language: str, table: str
+    ) -> list["LocalizedString"]:
         """Convert a list of DotStringsEntry's into a list of LocalizedString's
 
-        :param List[DotStringsEntry] entries: The DotStringsEntry's to convert
+        :param list[DotStringsEntry] entries: The DotStringsEntry's to convert
         :param str language: The language the DotStringsEntry's are in
         :param str table: The table the DotStringsEntry's are from
 

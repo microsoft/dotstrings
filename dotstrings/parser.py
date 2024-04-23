@@ -2,7 +2,7 @@
 
 import plistlib
 import re
-from typing import BinaryIO, List, Optional, Pattern, TextIO, Union
+from typing import BinaryIO, Pattern, TextIO
 
 from dotstrings.exceptions import DotStringsException
 from dotstrings.dot_strings_entry import DotStringsEntry
@@ -34,7 +34,7 @@ class Scanner:
         """
         return self.offset < len(self.string)
 
-    def scan(self, pattern: Union[str, Pattern], flags: int = 0) -> Optional[str]:
+    def scan(self, pattern: str | Pattern, flags: int = 0) -> str | None:
         """Scan a string for a pattern and return the string if found.
 
         :param pattern: The pattern to scan for
@@ -57,7 +57,7 @@ class Scanner:
         return None
 
 
-def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> List[DotStringsEntry]:
+def load(file_details: TextIO | str, encoding: str | None = None) -> list[DotStringsEntry]:
     """Parse the contents of a .strings file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -87,7 +87,7 @@ def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> Li
     raise DotStringsException(f"Could not determine encoding for file at path: {file_details}")
 
 
-def loads(contents: str) -> List[DotStringsEntry]:
+def loads(contents: str) -> list[DotStringsEntry]:
     """Parse the contents of a .strings file.
 
     Note: CRLF is not supported in strings.
@@ -158,7 +158,7 @@ def loads(contents: str) -> List[DotStringsEntry]:
     return strings
 
 
-def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
+def load_dict(file_details: BinaryIO | str) -> list[DotStringsDictEntry]:
     """Parse the contents of a .stringsdict file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -175,7 +175,7 @@ def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
         return load_dict(stringsdict_file)
 
 
-def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
+def loads_dict(contents: bytes) -> list[DotStringsDictEntry]:
     """Parse the contents of a .stringsdict file from binary data.
 
     :param contents: The binary data of a .stringsdict file

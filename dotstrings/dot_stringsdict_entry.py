@@ -1,6 +1,5 @@
 """Base types for the dotstrings library."""
 
-from typing import Optional
 from dotstrings.exceptions import DotStringsException
 
 VARIABLE_VALUE_TYPE_KEY = "NSStringFormatValueTypeKey"
@@ -22,13 +21,13 @@ class Variable:
     :param other_value: Value for other
     """
 
-    value_type: Optional[str]
-    zero_value: Optional[str]
-    one_value: Optional[str]
-    two_value: Optional[str]
-    few_value: Optional[str]
-    many_value: Optional[str]
-    other_value: Optional[str]
+    value_type: str | None
+    zero_value: str | None
+    one_value: str | None
+    two_value: str | None
+    few_value: str | None
+    many_value: str | None
+    other_value: str | None
 
     def __init__(self) -> None:
         self.value_type = None

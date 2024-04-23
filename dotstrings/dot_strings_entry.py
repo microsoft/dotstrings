@@ -1,7 +1,5 @@
 """Base types for the dotstrings library."""
 
-from typing import List
-
 
 class DotStringsEntry:
     """Represents a .strings entry.
@@ -13,9 +11,9 @@ class DotStringsEntry:
 
     key: str
     value: str
-    comments: List[str]
+    comments: list[str]
 
-    def __init__(self, key: str, value: str, comments: List[str]) -> None:
+    def __init__(self, key: str, value: str, comments: list[str]) -> None:
         self.key = key
         self.value = value
         self.comments = comments

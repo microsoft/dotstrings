@@ -1,6 +1,6 @@
 """Representation of a localized bundle."""
 
-from typing import cast, Dict, List, Set
+from typing import cast
 
 from dotstrings.exceptions import DotStringsException
 from dotstrings.localized_string import LocalizedString
@@ -12,17 +12,17 @@ class LocalizedBundle:
     :param raw_entries: The raw dictionary entries that were parsed from disk
     """
 
-    def __init__(self, raw_entries: Dict[str, Dict[str, List[LocalizedString]]]) -> None:
+    def __init__(self, raw_entries: dict[str, dict[str, list[LocalizedString]]]) -> None:
         self.raw_entries = raw_entries
 
-    def languages(self) -> List[str]:
+    def languages(self) -> list[str]:
         """Return the languages supported in the bundle
 
         :returns: A list of language codes
         """
         return list(self.raw_entries.keys())
 
-    def table_names(self, validate_identical: bool = False) -> List[str]:
+    def table_names(self, validate_identical: bool = False) -> list[str]:
         """Return the tables in the bundle.
 
         :param validate_identical: Set to True to confirm all languages have the
@@ -35,7 +35,7 @@ class LocalizedBundle:
 
             # Build up a map of languages to table names
 
-            found_tables: Dict[str, Set[str]] = {}
+            found_tables: dict[str, set[str]] = {}
             for language, table_map in self.raw_entries.items():
                 # table_map is a dictionary of names to lists of strings
                 found_tables[language] = set(table_map.keys())
@@ -72,7 +72,7 @@ class LocalizedBundle:
 
         return list(all_table_names)
 
-    def tables_for_language(self, language: str) -> Dict[str, List[LocalizedString]]:
+    def tables_for_language(self, language: str) -> dict[str, list[LocalizedString]]:
         """Return the tables for a language.
 
         :param language: The language to get the tables for
@@ -85,11 +85,11 @@ class LocalizedBundle:
         if result is sentinel:
             raise DotStringsException(f"There were no entries for language: {language}")
 
-        return cast(Dict[str, List[LocalizedString]], result)
+        return cast(dict[str, list[LocalizedString]], result)
 
     def table_for_languages(
         self, table: str, *, allow_missing: bool = False
-    ) -> Dict[str, List[LocalizedString]]:
+    ) -> dict[str, list[LocalizedString]]:
         """Return a dictionary of languages to strings for a given table.
 
         :param table: The table to load the data for
@@ -109,13 +109,13 @@ class LocalizedBundle:
             if table_data is sentinel and not allow_missing:
                 raise DotStringsException(f"Could not find table {table} for language {language}")
 
-            results[language] = cast(List[LocalizedString], table_data)
+            results[language] = cast(list[LocalizedString], table_data)
 
         return results
 
     def tables(
         self, *, validate_missing: bool = True
-    ) -> Dict[str, Dict[str, List[LocalizedString]]]:
+    ) -> dict[str, dict[str, list[LocalizedString]]]:
         """Return the entries in the bundle, first keyed by table, then by language.
 
         :param bool validate_missing: Set to False to disable the check that a table exists for every language
