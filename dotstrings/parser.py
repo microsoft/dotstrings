@@ -2,8 +2,9 @@
 
 import plistlib
 import re
-from typing import BinaryIO, List, Optional, Pattern, TextIO, Union
+from typing import BinaryIO, Pattern, TextIO
 
+from dotstrings.exceptions import DotStringsException
 from dotstrings.dot_strings_entry import DotStringsEntry
 from dotstrings.dot_stringsdict_entry import DotStringsDictEntry
 
@@ -33,7 +34,7 @@ class Scanner:
         """
         return self.offset < len(self.string)
 
-    def scan(self, pattern: Union[str, Pattern], flags: int = 0) -> Optional[str]:
+    def scan(self, pattern: str | Pattern, flags: int = 0) -> str | None:
         """Scan a string for a pattern and return the string if found.
 
         :param pattern: The pattern to scan for
@@ -56,7 +57,7 @@ class Scanner:
         return None
 
 
-def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> List[DotStringsEntry]:
+def load(file_details: TextIO | str, encoding: str | None = None) -> list[DotStringsEntry]:
     """Parse the contents of a .strings file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -83,10 +84,10 @@ def load(file_details: Union[TextIO, str], encoding: Optional[str] = None) -> Li
         except UnicodeDecodeError:
             pass
 
-    raise Exception(f"Could not determine encoding for file at path: {file_details}")
+    raise DotStringsException(f"Could not determine encoding for file at path: {file_details}")
 
 
-def loads(contents: str) -> List[DotStringsEntry]:
+def loads(contents: str) -> list[DotStringsEntry]:
     """Parse the contents of a .strings file.
 
     Note: CRLF is not supported in strings.
@@ -98,7 +99,7 @@ def loads(contents: str) -> List[DotStringsEntry]:
     # Sometimes we have CRLF. It's easier to just replace now. This could, in
     # theory, cause issues, but we just don't support it for now.
     if "\r\n" in contents:
-        raise Exception("Strings contain CRLF")
+        raise DotStringsException("Strings contain CRLF")
     contents = contents.replace("\r\n", "\n")
 
     scanner = Scanner(contents)
@@ -141,13 +142,13 @@ def loads(contents: str) -> List[DotStringsEntry]:
 
         if entry is None:
             if scanner.has_more():
-                raise Exception(f"Expected an entry at offset {scanner.offset}")
+                raise DotStringsException(f"Expected an entry at offset {scanner.offset}")
             break
 
         # Now extract the key and value
         entry_matches = Patterns.entry.search(entry)
         if not entry_matches:
-            raise Exception(f"Failed to parse entry at offset {scanner.offset}")
+            raise DotStringsException(f"Failed to parse entry at offset {scanner.offset}")
 
         key = entry_matches.group(1)
         value = entry_matches.group(2)
@@ -157,7 +158,7 @@ def loads(contents: str) -> List[DotStringsEntry]:
     return strings
 
 
-def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
+def load_dict(file_details: BinaryIO | str) -> list[DotStringsDictEntry]:
     """Parse the contents of a .stringsdict file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -174,7 +175,7 @@ def load_dict(file_details: Union[BinaryIO, str]) -> List[DotStringsDictEntry]:
         return load_dict(stringsdict_file)
 
 
-def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
+def loads_dict(contents: bytes) -> list[DotStringsDictEntry]:
     """Parse the contents of a .stringsdict file from binary data.
 
     :param contents: The binary data of a .stringsdict file
@@ -185,12 +186,12 @@ def loads_dict(contents: bytes) -> List[DotStringsDictEntry]:
     strings_dict = plistlib.loads(contents)
 
     if not isinstance(strings_dict, dict):
-        raise Exception("stringsdict format is incorrect")
+        raise DotStringsException("stringsdict format is incorrect")
 
     entries = []
     for key, entry in strings_dict.items():
         if not isinstance(entry, dict):
-            raise Exception("stringsdict entry format is incorrect")
+            raise DotStringsException("stringsdict entry format is incorrect")
 
         entries.append(DotStringsDictEntry.parse(key, entry))
 

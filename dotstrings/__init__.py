@@ -1,11 +1,11 @@
 """Utilities for dealing with .strings files"""
 
 import os
-from typing import Dict, List, Optional, Set
 
 from dotstrings.parser import load, loads, load_dict, loads_dict
 from dotstrings.dot_strings_entry import DotStringsEntry
 from dotstrings.dot_stringsdict_entry import DotStringsDictEntry, Variable
+from dotstrings.exceptions import DotStringsException
 from dotstrings.localized_bundle import LocalizedBundle
 from dotstrings.localized_string import LocalizedString
 
@@ -50,7 +50,7 @@ def stringsdict_file_path(stringsdict_folder: str, language: str, table_name: st
     )
 
 
-def languages_in_folder(strings_folder: str) -> Set[str]:
+def languages_in_folder(strings_folder: str) -> set[str]:
     """Find all the languages in a folder
 
     This looks for *.lproj folders.
@@ -65,7 +65,7 @@ def languages_in_folder(strings_folder: str) -> Set[str]:
     return {language.replace(".lproj", "") for language in languages}
 
 
-def load_table(strings_folder: str, language: str, table_name: str) -> List[LocalizedString]:
+def load_table(strings_folder: str, language: str, table_name: str) -> list[LocalizedString]:
     """Load the specified .strings table
 
     :param strings_folder: The location of the strings folder (which contains
@@ -83,7 +83,7 @@ def load_table(strings_folder: str, language: str, table_name: str) -> List[Loca
     )
 
 
-def load_language_tables(strings_folder: str, language: str) -> Dict[str, List[LocalizedString]]:
+def load_language_tables(strings_folder: str, language: str) -> dict[str, list[LocalizedString]]:
     """Load the .strings tables for a given language
 
     :param strings_folder: The location of the strings folder (which contains
@@ -129,7 +129,7 @@ def load_all_strings(strings_folder: str) -> LocalizedBundle:
 
 def normalize(
     strings_path: str,
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
     remove_duplicates: bool = True,
     sort_comments: bool = True,
 ) -> None:
@@ -165,7 +165,7 @@ def normalize(
         # If we have duplicate keys but the values don't match, that's an
         # exception, whether or not we are removing duplicates
         if deduped_entries[-1].value != entry.value or not remove_duplicates:
-            raise Exception(f"Found duplicate strings with key: {entry.key}")
+            raise DotStringsException(f"Found duplicate strings with key: {entry.key}")
 
         deduped_entries[-1].comments.extend(entry.comments)
 
