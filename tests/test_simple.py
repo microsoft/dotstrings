@@ -9,6 +9,7 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..")))
 import dotstrings
 
+
 class SimpleTests(unittest.TestCase):
     """Simple tests."""
 
