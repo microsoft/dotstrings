@@ -1,0 +1,13 @@
+"key-case1" = "value
+that
+has
+newlines";
+
+"key-case2" = "Major text in one line and just the closing in next line
+";
+
+"key-case3" = "A paragraph like text structure
+
+that goes like this and goes on and on
+
+and ends here";
