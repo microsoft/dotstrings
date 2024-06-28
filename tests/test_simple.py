@@ -86,8 +86,7 @@ class SimpleTests(unittest.TestCase):
         entries = dotstrings.load(strings_file_path)
 
         self.assertEqual(entries[0].strings_format(), '/* This is a\n   multiline comment */\n"carry" = "breathe";')
-        self.assertEqual(entries[1].strings_format(
-        ), '/* This is another\n   multiline comment, but for a dupe */\n"condition" = "outgoing";')
+        self.assertEqual(entries[1].strings_format(), '/* This is another\n   multiline comment, but for a dupe */\n"condition" = "outgoing";')
         self.assertEqual(entries[2].strings_format(), '/* precious */\n"condition" = "outgoing";')
 
     def test_string_with_uneven_whitespace(self):
