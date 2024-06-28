@@ -2,12 +2,12 @@
 
 # pylint: disable=line-too-long
 
+import dotstrings
 import os
 import sys
 import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..")))
-import dotstrings
 
 
 class SimpleTests(unittest.TestCase):
@@ -86,9 +86,10 @@ class SimpleTests(unittest.TestCase):
         entries = dotstrings.load(strings_file_path)
 
         self.assertEqual(entries[0].strings_format(), '/* This is a\n   multiline comment */\n"carry" = "breathe";')
-        self.assertEqual(entries[1].strings_format(), '/* This is another\n   multiline comment, but for a dupe */\n"condition" = "outgoing";')
+        self.assertEqual(entries[1].strings_format(
+        ), '/* This is another\n   multiline comment, but for a dupe */\n"condition" = "outgoing";')
         self.assertEqual(entries[2].strings_format(), '/* precious */\n"condition" = "outgoing";')
-        
+
     def test_string_with_uneven_whitespace(self):
         """Test that string with uneven whitespaces work"""
         string_with_uneven_whitespace_path = os.path.join(self.strings_path, "string_with_uneven_whitespace.strings")
@@ -103,3 +104,32 @@ class SimpleTests(unittest.TestCase):
 
         self.assertEqual(entries[2].key, "This is again a key")
         self.assertEqual(entries[2].value, "This is again a value")
+
+    def test_string_with_multiline_value(self) -> None:
+        """Test the strings that have values spanning multiple lines"""
+
+        multiline_value_path = os.path.join(self.strings_path, "string_with_multiline_value.strings")
+        entries = dotstrings.load(multiline_value_path)
+        self.assertEqual(len(entries), 3)
+
+        self.assertEqual(entries[0].key, "key-case1")
+        self.assertEqual(entries[0].value, """value
+that
+has
+newlines""")
+        self.assertEqual(entries[0].value, "value\nthat\nhas\nnewlines")
+
+        self.assertEqual(entries[1].key, "key-case2")
+        self.assertEqual(entries[1].value, """Major text in one line and just the closing in next line
+""")
+        self.assertEqual(entries[1].value, "Major text in one line and just the closing in next line\n")
+
+        self.assertEqual(entries[2].key, "key-case3")
+        self.assertEqual(entries[2].value, """A paragraph like text structure
+
+that goes like this and goes on and on
+
+and ends here""")
+
+        self.assertEqual(
+            entries[2].value, "A paragraph like text structure\n\nthat goes like this and goes on and on\n\nand ends here")
