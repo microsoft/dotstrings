@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "dotstrings"
-version = "3.0.0"
+version = "3.1.0"
 description = "Tools for dealing with the .strings files for iOS and macOS"
 
 license = "MIT"
 
 authors = [
-    "Dale Myers <dalemy@microsoft.com>"
+    "Dale Myers <dalemyers@microsoft.com>"
 ]
 
 readme = 'README.md'
