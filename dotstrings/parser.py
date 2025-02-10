@@ -14,8 +14,8 @@ class Patterns:
 
     comment = re.compile(r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE)
     whitespace = re.compile(r"\s*", re.MULTILINE)
-    entry = re.compile(r'"(.*)"\s*=\s*"(.*)";')
-    quoteless_key_entry = re.compile(r'(.*?)\s*=\s*"(.*)";')
+    entry = re.compile(r'"(.*)"\s*=\s*"(.*)" *;')
+    quoteless_key_entry = re.compile(r'(.*?)\s*=\s*"(.*)" *;')
 
 
 class Scanner:
