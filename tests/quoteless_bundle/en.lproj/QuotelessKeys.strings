@@ -1,0 +1,5 @@
+/* The description for the reason for using location service */
+NSLocationAlwaysAndWhenInUseUsageDescription = "We use location services to do things";
+
+/* The description for the reason for accessing photos */
+NSPhotoLibraryUsageDescription = "We use your photos for stuff";
