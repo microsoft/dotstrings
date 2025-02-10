@@ -76,7 +76,7 @@ def load(file_details: TextIO | str, encoding: str | None = None) -> list[DotStr
     if encoding:
         encoding_list = [encoding]
     else:
-        encoding_list = ["utf-8-sig", "utf-8", "utf-16-le", "utf-16-be"]
+        encoding_list = ["utf-8-sig", "utf-8", "utf-16", "utf-16-le", "utf-16-be"]
 
     for encoding_option in encoding_list:
         try:
