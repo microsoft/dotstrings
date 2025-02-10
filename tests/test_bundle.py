@@ -16,8 +16,15 @@ class BundleTests(unittest.TestCase):
     def setUp(self):
         current_file_path = os.path.abspath(__file__)
         current_folder_path = os.path.dirname(current_file_path)
-        self.bundle_path = os.path.abspath(os.path.join(current_folder_path, "string_bundle"))
-        self.bundle2_path = os.path.abspath(os.path.join(current_folder_path, "string_bundle2"))
+        self.bundle_path = os.path.abspath(
+            os.path.join(current_folder_path, "string_bundle")
+        )
+        self.bundle2_path = os.path.abspath(
+            os.path.join(current_folder_path, "string_bundle2")
+        )
+        self.quoteless_path = os.path.abspath(
+            os.path.join(current_folder_path, "quoteless_bundle")
+        )
 
     def test_load_all(self):
         """Test that an entire bundle loads."""
@@ -29,6 +36,29 @@ class BundleTests(unittest.TestCase):
 
         french_strings = strings["fr"]
         self.assertEqual(["One", "Two"], sorted(list(french_strings.keys())))
+
+    def test_load_quoteless(self):
+        """Test that the quoteless key bundle loads."""
+        strings = dotstrings.load_all_strings(self.quoteless_path).raw_entries
+        self.assertEqual(["en", "fr"], sorted(list(strings.keys())))
+
+        english_strings = strings["en"]["QuotelessKeys"]
+        self.assertEqual(
+            [
+                "NSLocationAlwaysAndWhenInUseUsageDescription",
+                "NSPhotoLibraryUsageDescription",
+            ],
+            sorted([string.key for string in english_strings]),
+        )
+
+        french_strings = strings["fr"]["QuotelessKeys"]
+        self.assertEqual(
+            [
+                "NSLocationAlwaysAndWhenInUseUsageDescription",
+                "NSPhotoLibraryUsageDescription",
+            ],
+            sorted([string.key for string in french_strings]),
+        )
 
     def test_localized_bundle_languages(self):
         """Test that the languages call in localized bundles works."""

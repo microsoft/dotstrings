@@ -15,6 +15,7 @@ class Patterns:
     comment = re.compile(r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE)
     whitespace = re.compile(r"\s*", re.MULTILINE)
     entry = re.compile(r'"(.*)"\s*=\s*"(.*)";')
+    quoteless_key_entry = re.compile(r'(.*?)\s*=\s*"(.*)";')
 
 
 class Scanner:
@@ -137,18 +138,32 @@ def loads(contents: str) -> list[DotStringsEntry]:
             # Pull out any whitespace
             _ = scanner.scan(Patterns.whitespace)
 
-        # Get the entry line
+        # Get the entry line. Always try with quotes first to avoid matching
+        # the "quoteless" style and then including the quotes in the key.
         entry = scanner.scan(Patterns.entry)
+        regular_entry = True
 
         if entry is None:
-            if scanner.has_more():
-                raise DotStringsException(f"Expected an entry at offset {scanner.offset}")
-            break
+            entry = scanner.scan(Patterns.quoteless_key_entry)
+            regular_entry = False
+
+            if entry is None:
+                if scanner.has_more():
+                    raise DotStringsException(
+                        f"Expected an entry at offset {scanner.offset}"
+                    )
+                break
 
         # Now extract the key and value
-        entry_matches = Patterns.entry.search(entry)
+        if regular_entry:
+            entry_matches = Patterns.entry.search(entry)
+        else:
+            entry_matches = Patterns.quoteless_key_entry.search(entry)
+
         if not entry_matches:
-            raise DotStringsException(f"Failed to parse entry at offset {scanner.offset}")
+            raise DotStringsException(
+                f"Failed to parse entry at offset {scanner.offset}"
+            )
 
         key = entry_matches.group(1)
         value = entry_matches.group(2)
