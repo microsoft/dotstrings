@@ -7,16 +7,25 @@ class DotStringsEntry:
     :param key: The key for the entry
     :param value: The value for the entry
     :param comments: Any comments associated with the entry
+    :param original_line: The original line number of the position of the key.
     """
 
     key: str
     value: str
     comments: list[str]
+    original_line: int
 
-    def __init__(self, key: str, value: str, comments: list[str]) -> None:
+    def __init__(
+        self,
+        key: str,
+        value: str,
+        comments: list[str],
+        original_line: int = 0,
+    ) -> None:
         self.key = key
         self.value = value
         self.comments = comments
+        self.original_line = original_line
 
     def strings_format(self) -> str:
         """Return the entry as would be formatted in a .strings file

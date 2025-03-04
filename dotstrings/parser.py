@@ -12,7 +12,9 @@ from dotstrings.dot_stringsdict_entry import DotStringsDictEntry
 class Patterns:
     """The patterns used by the parser."""
 
-    comment = re.compile(r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE)
+    comment = re.compile(
+        r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE
+    )
     whitespace = re.compile(r"\s*", re.MULTILINE)
     entry = re.compile(r'"(.*)"\s*=\s*"(.*)" *;')
     quoteless_key_entry = re.compile(r'(.*?)\s*=\s*"(.*)" *;')
@@ -23,10 +25,12 @@ class Scanner:
 
     string: str
     offset: int
+    line: int
 
     def __init__(self, string: str) -> None:
         self.string = string
         self.offset = 0
+        self.line = 0
 
     def has_more(self) -> bool:
         """Check if there is more string remaining.
@@ -51,14 +55,17 @@ class Scanner:
 
         match = _pattern.match(self.string, self.offset)
 
-        if match is not None:
-            self.offset = match.end()
-            return match.group(0)
+        if match is None:
+            return None
 
-        return None
+        self.offset = match.end()
+        self.line += match.group(0).count("\n")
+        return match.group(0)
 
 
-def load(file_details: TextIO | str, encoding: str | None = None) -> list[DotStringsEntry]:
+def load(
+    file_details: TextIO | str, encoding: str | None = None
+) -> list[DotStringsEntry]:
     """Parse the contents of a .strings file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -85,7 +92,9 @@ def load(file_details: TextIO | str, encoding: str | None = None) -> list[DotStr
         except UnicodeDecodeError:
             pass
 
-    raise DotStringsException(f"Could not determine encoding for file at path: {file_details}")
+    raise DotStringsException(
+        f"Could not determine encoding for file at path: {file_details}"
+    )
 
 
 def loads(contents: str) -> list[DotStringsEntry]:
@@ -168,7 +177,7 @@ def loads(contents: str) -> list[DotStringsEntry]:
         key = entry_matches.group(1)
         value = entry_matches.group(2)
 
-        strings.append(DotStringsEntry(key, value, comments))
+        strings.append(DotStringsEntry(key, value, comments, scanner.line))
 
     return strings
 
