@@ -56,3 +56,25 @@ class DotStringsEntry:
         :return: A string representation of the object
         """
         return self.__repr__()
+
+    def __hash__(self) -> int:
+        """Return a hash of the object.
+
+        :return: A hash of the object
+        """
+        return hash((self.key, self.value, tuple(self.comments)))
+
+    def __eq__(self, other: object) -> bool:
+        """Check if two objects are equal.
+
+        :param other: The object to compare to
+        :return: True if the objects are equal, False otherwise
+        """
+        if not isinstance(other, DotStringsEntry):
+            return False
+
+        return (
+            self.key == other.key
+            and self.value == other.value
+            and self.comments == other.comments
+        )
