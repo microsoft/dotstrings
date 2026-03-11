@@ -51,13 +51,8 @@ def _create_file_chunks(file_paths: list[str], chunk_size: int) -> list[list[str
     :return: List of file path chunks
     """
     chunks = []
-    num_chunks = (len(file_paths) // chunk_size) + 1
-    for i in range(0, num_chunks):
-        start_idx = i * chunk_size
-        end_idx = (i + 1) * chunk_size
-        current_files = file_paths[start_idx:end_idx]
-        if current_files:
-            chunks.append(current_files)
+    for i in range(0, len(file_paths), chunk_size):
+        chunks.append(file_paths[i : i + chunk_size])
     return chunks
 
 
@@ -67,12 +62,13 @@ def _get_strings_files(english_strings_directory: str) -> list[str]:
     :param english_strings_directory: Directory to search
     :return: List of .strings file paths
     """
-    return [
-        os.path.join(english_strings_directory, file_name)
-        for file_name in os.listdir(english_strings_directory)
-        if file_name.endswith(".strings")
-        and os.path.isfile(os.path.join(english_strings_directory, file_name))
-    ]
+    strings_files = []
+    for file_name in os.listdir(english_strings_directory):
+        file_path = os.path.join(english_strings_directory, file_name)
+        # Check for file type and .strings extension
+        if file_name.endswith(".strings") and os.path.isfile(file_path):
+            strings_files.append(file_path)
+    return strings_files
 
 
 def _process_chunks(
@@ -84,15 +80,46 @@ def _process_chunks(
     :param english_strings_directory: Directory for output
     :param max_workers: Number of workers to use
     """
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(chunks))) as executor:
-        futures = {
-            executor.submit(_extract_strings, chunk, english_strings_directory): chunk
-            for chunk in chunks
-        }
-        for future in as_completed(futures):
-            error = future.result()
-            if error:
-                raise DotStringsException(error)
+    temp_dirs = []
+
+    try:
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(chunks))) as executor:
+            # Create temporary directories for each chunk so that we can process in parallel without file conflicts
+            for _ in chunks:
+                temp_dir = tempfile.mkdtemp()
+                temp_dirs.append(temp_dir)
+
+            # Submit tasks with their own temp directories
+            futures = {
+                executor.submit(_extract_strings, chunk, temp_dir): (chunk, temp_dir)
+                for chunk, temp_dir in zip(chunks, temp_dirs)
+            }
+
+            for future in as_completed(futures):
+                future.result()  # Raise any exceptions that occurred
+
+        # Merge all temp directories into final output
+        for temp_dir in temp_dirs:
+            for file_name in os.listdir(temp_dir):
+                if not file_name.endswith(".strings"):
+                    continue
+
+                temp_file_path = os.path.join(temp_dir, file_name)
+                final_file_path = os.path.join(english_strings_directory, file_name)
+
+                # Read content from temp file
+                with open(temp_file_path, "r", encoding="utf-16") as temp_file:
+                    content = temp_file.read()
+
+                # Append to final file
+                with open(final_file_path, "a", encoding="utf-16") as final_file:
+                    final_file.write(content)
+
+    finally:
+        # Clean up temporary directories
+        for temp_dir in temp_dirs:
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
 
 
 def _convert_strings_files(strings_files: list[str], max_workers: int) -> None:
@@ -109,13 +136,11 @@ def _convert_strings_files(strings_files: list[str], max_workers: int) -> None:
             future.result()  # Raise any exceptions that occurred
 
 
-def _extract_strings(file_paths: list[str], english_strings_directory: str) -> str | None:
+def _extract_strings(file_paths: list[str], english_strings_directory: str) -> None:
     """Extract strings for a chunk of files.
 
     :param list[str] file_paths: The files to extract strings from
     :param str english_strings_directory: The directory to place the extracted strings
-
-    :return: An error message if extraction fails, otherwise None
     """
     genstrings_command = ["xcrun", "extractLocStrings", "-a", "-noPositionalParameters", "-u"]
     genstrings_command += ["-o", english_strings_directory]
@@ -140,10 +165,9 @@ def _extract_strings(file_paths: list[str], english_strings_directory: str) -> s
         output = output.strip()
 
         if len(output) > 0:
-            return f"Encountered an error generating strings: {output}"
-        return None
+            raise DotStringsException(f"Encountered an error generating strings: {output}")
     except subprocess.CalledProcessError as ex:
-        return f"Unable generate .strings files! {ex}"
+        raise DotStringsException(f"Unable generate .strings files! {ex}") from ex
 
 
 def generate_strings(
