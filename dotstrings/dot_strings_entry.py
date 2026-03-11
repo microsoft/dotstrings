@@ -83,7 +83,5 @@ class DotStringsEntry:
             return False
 
         return (
-            self.key == other.key
-            and self.value == other.value
-            and self.comments == other.comments
+            self.key == other.key and self.value == other.value and self.comments == other.comments
         )

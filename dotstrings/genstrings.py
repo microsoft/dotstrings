@@ -29,6 +29,86 @@ def _convert_to_utf8(file_path: str) -> None:
     shutil.move(temp_file_path, file_path)
 
 
+def _clear_existing_strings(english_strings_directory: str) -> None:
+    """Clear existing .strings files in the directory.
+
+    :param english_strings_directory: Directory to clear .strings files from
+    """
+    for table in os.listdir(english_strings_directory):
+        # Do not clear non .strings files
+        if not table.endswith(".strings"):
+            continue
+        table_path = os.path.join(english_strings_directory, table)
+        with open(table_path, "w", encoding="utf-8") as table_file:
+            table_file.write("")
+
+
+def _create_file_chunks(file_paths: list[str], chunk_size: int) -> list[list[str]]:
+    """Split file paths into chunks.
+
+    :param file_paths: List of file paths to split
+    :param chunk_size: Size of each chunk
+    :return: List of file path chunks
+    """
+    chunks = []
+    num_chunks = (len(file_paths) // chunk_size) + 1
+    for i in range(0, num_chunks):
+        start_idx = i * chunk_size
+        end_idx = (i + 1) * chunk_size
+        current_files = file_paths[start_idx:end_idx]
+        if current_files:
+            chunks.append(current_files)
+    return chunks
+
+
+def _get_strings_files(english_strings_directory: str) -> list[str]:
+    """Get all .strings file paths in the directory.
+
+    :param english_strings_directory: Directory to search
+    :return: List of .strings file paths
+    """
+    return [
+        os.path.join(english_strings_directory, file_name)
+        for file_name in os.listdir(english_strings_directory)
+        if file_name.endswith(".strings")
+        and os.path.isfile(os.path.join(english_strings_directory, file_name))
+    ]
+
+
+def _process_chunks(
+    chunks: list[list[str]], english_strings_directory: str, max_workers: int
+) -> None:
+    """Process chunks of files in parallel.
+
+    :param chunks: List of file chunks to process
+    :param english_strings_directory: Directory for output
+    :param max_workers: Number of workers to use
+    """
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(chunks))) as executor:
+        futures = {
+            executor.submit(_extract_strings, chunk, english_strings_directory): chunk
+            for chunk in chunks
+        }
+        for future in as_completed(futures):
+            error = future.result()
+            if error:
+                raise DotStringsException(error)
+
+
+def _convert_strings_files(strings_files: list[str], max_workers: int) -> None:
+    """Convert .strings files to UTF-8 in parallel.
+
+    :param strings_files: List of .strings file paths to convert
+    :param max_workers: Number of workers to use
+    """
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(strings_files))) as executor:
+        futures = {
+            executor.submit(_convert_to_utf8, file_path): file_path for file_path in strings_files
+        }
+        for future in as_completed(futures):
+            future.result()  # Raise any exceptions that occurred
+
+
 def _extract_strings(file_paths: list[str], english_strings_directory: str) -> str | None:
     """Extract strings for a chunk of files.
 
@@ -114,49 +194,16 @@ def generate_strings(
 
     # Empty existing strings
     if clear_existing:
-        for table in os.listdir(english_strings_directory):
-            # Do not clear non .strings files
-            if not table.endswith(".strings"):
-                continue
-            with open(
-                os.path.join(english_strings_directory, table), "w", encoding="utf-8"
-            ) as table_file:
-                table_file.write("")
+        _clear_existing_strings(english_strings_directory)
 
     # We can't pass in too many files on the command line or the argument list
     # is too long. To avoid this, we do it in chunks of 500.
     # Using larger chunks reduces subprocess overhead significantly.
-    files_per_iteration = 500
-
-    # Create chunks
-    chunks = []
-    for i in range(0, (len(file_paths) // files_per_iteration) + 1):
-        current_files = file_paths[i * files_per_iteration : (i + 1) * files_per_iteration]
-        if current_files:
-            chunks.append(current_files)
+    chunks = _create_file_chunks(file_paths, chunk_size=500)
 
     # Process chunks in parallel
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(chunks))) as executor:
-        futures = {
-            executor.submit(_extract_strings, chunk, english_strings_directory): chunk
-            for chunk in chunks
-        }
-        for future in as_completed(futures):
-            error = future.result()
-            if error:
-                raise DotStringsException(error)
+    _process_chunks(chunks, english_strings_directory, max_workers)
 
     # Convert all .strings files to UTF-8 in parallel
-    strings_files = [
-        os.path.join(english_strings_directory, file_name)
-        for file_name in os.listdir(english_strings_directory)
-        if file_name.endswith(".strings")
-        and os.path.isfile(os.path.join(english_strings_directory, file_name))
-    ]
-
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(strings_files))) as executor:
-        futures = {
-            executor.submit(_convert_to_utf8, file_path): file_path for file_path in strings_files
-        }
-        for future in as_completed(futures):
-            future.result()  # Raise any exceptions that occurred
+    strings_files = _get_strings_files(english_strings_directory)
+    _convert_strings_files(strings_files, max_workers)

@@ -12,9 +12,7 @@ from dotstrings.dot_stringsdict_entry import DotStringsDictEntry
 class Patterns:
     """The patterns used by the parser."""
 
-    comment = re.compile(
-        r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE
-    )
+    comment = re.compile(r"(\'(?:[^\'\\]|\\[\s\S])*\')|//.*|/\*(?:[^*]|\*(?!/))*\*/", re.MULTILINE)
     whitespace = re.compile(r"\s*", re.MULTILINE)
     entry = re.compile(r'"(.*)"\s*=\s*"(.*)" *;')
     quoteless_key_entry = re.compile(r'(.*?)\s*=\s*"(.*)" *;')
@@ -63,9 +61,7 @@ class Scanner:
         return match.group(0)
 
 
-def load(
-    file_details: TextIO | str, encoding: str | None = None
-) -> list[DotStringsEntry]:
+def load(file_details: TextIO | str, encoding: str | None = None) -> list[DotStringsEntry]:
     """Parse the contents of a .strings file from a file pointer.
 
     :param file_details: The file pointer or a file path
@@ -92,9 +88,7 @@ def load(
         except UnicodeDecodeError:
             pass
 
-    raise DotStringsException(
-        f"Could not determine encoding for file at path: {file_details}"
-    )
+    raise DotStringsException(f"Could not determine encoding for file at path: {file_details}")
 
 
 def loads(contents: str) -> list[DotStringsEntry]:
@@ -158,9 +152,7 @@ def loads(contents: str) -> list[DotStringsEntry]:
 
             if entry is None:
                 if scanner.has_more():
-                    raise DotStringsException(
-                        f"Expected an entry at offset {scanner.offset}"
-                    )
+                    raise DotStringsException(f"Expected an entry at offset {scanner.offset}")
                 break
 
         # Now extract the key and value
@@ -170,9 +162,7 @@ def loads(contents: str) -> list[DotStringsEntry]:
             entry_matches = Patterns.quoteless_key_entry.search(entry)
 
         if not entry_matches:
-            raise DotStringsException(
-                f"Failed to parse entry at offset {scanner.offset}"
-            )
+            raise DotStringsException(f"Failed to parse entry at offset {scanner.offset}")
 
         key = entry_matches.group(1)
         value = entry_matches.group(2)
