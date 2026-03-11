@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dotstrings.exceptions import DotStringsException
 
@@ -28,13 +29,54 @@ def _convert_to_utf8(file_path: str) -> None:
     shutil.move(temp_file_path, file_path)
 
 
+def _extract_strings(file_paths: list[str], english_strings_directory: str) -> str | None:
+    """Extract strings for a chunk of files.
+
+    :param list[str] file_paths: The files to extract strings from
+    :param str english_strings_directory: The directory to place the extracted strings
+
+    :return: An error message if extraction fails, otherwise None
+    """
+    genstrings_command = ["xcrun", "extractLocStrings", "-a", "-noPositionalParameters", "-u"]
+    genstrings_command += ["-o", english_strings_directory]
+    genstrings_command.extend(file_paths)
+
+    try:
+        output_bytes = subprocess.run(
+            genstrings_command,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).stdout
+
+        # We decode here rather than in the subprocess call because it seems
+        # that extractLocStrings can occasionally flush its buffer without
+        # writing the entirety of a character out. When that happens, the
+        # text wrapper tries to decode it and fails. By buffering all bytes
+        # until the end of the command and then decoding, we avoid this
+        # issue.
+        output = output_bytes.decode("utf-8", errors="backslashreplace")
+
+        output = output.strip()
+
+        if len(output) > 0:
+            return f"Encountered an error generating strings: {output}"
+        return None
+    except subprocess.CalledProcessError as ex:
+        return f"Unable generate .strings files! {ex}"
+
+
 def generate_strings(
-    *, output_directory: str, file_paths: list[str], clear_existing: bool = True
+    *,
+    output_directory: str,
+    file_paths: list[str],
+    clear_existing: bool = True,
+    max_workers: int = 1,
 ) -> None:
     """Run the genstrings command over the files passed in.
 
     Genstrings scans code files for usage of the `NSLocalizedString` macro. It
-    the generates the corresponding .strings file from these. e.g. If you have:
+    then generates the corresponding .strings file from these. e.g. If you have:
 
     ```objc
     label.text = NSLocalizedString(@"Hello World", @"Greeting to the user");
@@ -58,6 +100,8 @@ def generate_strings(
     :param bool clear_existing: Set to True when the existing files in the
                                 output directory should be wiped before
                                 generating the new strings. Defaults to True.
+    :param int max_workers: The maximum number of worker threads to use for parallel processing.
+                            Defaults to 1 (no parallelism).
 
     :raises Exception: If we can't generate the .strings files
     """
@@ -80,44 +124,39 @@ def generate_strings(
                 table_file.write("")
 
     # We can't pass in too many files on the command line or the argument list
-    # is too long. To avoid this, we do it in chunks of 100.
-    files_per_iteration = 100
+    # is too long. To avoid this, we do it in chunks of 500.
+    # Using larger chunks reduces subprocess overhead significantly.
+    files_per_iteration = 500
 
+    # Create chunks
+    chunks = []
     for i in range(0, (len(file_paths) // files_per_iteration) + 1):
-
-        # Take the next group of files
         current_files = file_paths[i * files_per_iteration : (i + 1) * files_per_iteration]
+        if current_files:
+            chunks.append(current_files)
 
-        genstrings_command = ["xcrun", "extractLocStrings", "-a", "-noPositionalParameters", "-u"]
-        genstrings_command += ["-o", english_strings_directory]
-        genstrings_command.extend(current_files)
+    # Process chunks in parallel
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(chunks))) as executor:
+        futures = {
+            executor.submit(_extract_strings, chunk, english_strings_directory): chunk
+            for chunk in chunks
+        }
+        for future in as_completed(futures):
+            error = future.result()
+            if error:
+                raise DotStringsException(error)
 
-        try:
-            output_bytes = subprocess.run(
-                genstrings_command,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            ).stdout
+    # Convert all .strings files to UTF-8 in parallel
+    strings_files = [
+        os.path.join(english_strings_directory, file_name)
+        for file_name in os.listdir(english_strings_directory)
+        if file_name.endswith(".strings")
+        and os.path.isfile(os.path.join(english_strings_directory, file_name))
+    ]
 
-            # We decode here rather than in the subprocess call because it seems
-            # that extractLocStrings can occasionally flush its buffer without
-            # writing the entirety of a character out. When that happens, the
-            # text wrapper tries to decode it and fails. By buffering all bytes
-            # until the end of the command and then decoding, we avoid this
-            # issue.
-            output = output_bytes.decode("utf-8", errors="backslashreplace")
-
-            output = output.strip()
-
-            if len(output) > 0:
-                raise DotStringsException(f"Encountered an error generating strings: {output}")
-        except subprocess.CalledProcessError as ex:
-            raise DotStringsException(f"Unable generate .strings files! {ex}") from ex
-
-    # Convert all .strings files to UTF-8
-    for file_name in os.listdir(english_strings_directory):
-        file_path = os.path.join(english_strings_directory, file_name)
-        # Check for file type and .strings extension
-        if file_name.endswith(".strings") and os.path.isfile(file_path):
-            _convert_to_utf8(file_path)
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(strings_files))) as executor:
+        futures = {
+            executor.submit(_convert_to_utf8, file_path): file_path for file_path in strings_files
+        }
+        for future in as_completed(futures):
+            future.result()  # Raise any exceptions that occurred
