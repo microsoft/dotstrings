@@ -128,12 +128,18 @@ def _convert_strings_files(strings_files: list[str], max_workers: int) -> None:
     :param strings_files: List of .strings file paths to convert
     :param max_workers: Number of workers to use
     """
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(strings_files))) as executor:
-        futures = {
-            executor.submit(_convert_to_utf8, file_path): file_path for file_path in strings_files
-        }
-        for future in as_completed(futures):
-            future.result()  # Raise any exceptions that occurred
+    if max_workers == 1 or len(strings_files) < 100:
+        # For small numbers of files, parallelism adds more overhead than it's worth
+        for strings_file in strings_files:
+            _convert_to_utf8(strings_file)
+    else:
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(strings_files))) as executor:
+            futures = {
+                executor.submit(_convert_to_utf8, file_path): file_path
+                for file_path in strings_files
+            }
+            for future in as_completed(futures):
+                future.result()  # Raise any exceptions that occurred
 
 
 def _extract_strings(file_paths: list[str], english_strings_directory: str) -> None:
