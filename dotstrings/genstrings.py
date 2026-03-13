@@ -99,20 +99,22 @@ def _process_chunks(
                 future.result()  # Raise any exceptions that occurred
 
         # Merge all temp directories into final output
+        content_by_file: dict[str, list[str]] = {}
         for temp_dir in temp_dirs:
             for file_name in os.listdir(temp_dir):
                 if not file_name.endswith(".strings"):
                     continue
 
-                temp_file_path = os.path.join(temp_dir, file_name)
-                final_file_path = os.path.join(english_strings_directory, file_name)
-
-                # Read content from temp file
-                with open(temp_file_path, "r", encoding="utf-16") as temp_file:
+                with open(os.path.join(temp_dir, file_name), "r", encoding="utf-16") as temp_file:
                     content = temp_file.read()
 
-                # Append to final file
-                with open(final_file_path, "a", encoding="utf-16") as final_file:
+                final_path = os.path.join(english_strings_directory, file_name)
+                content_by_file.setdefault(final_path, []).append(content)
+
+        # Write once per final file
+        for final_path, contents in content_by_file.items():
+            with open(final_path, "a", encoding="utf-16") as final_file:
+                for content in contents:
                     final_file.write(content)
 
     finally:
