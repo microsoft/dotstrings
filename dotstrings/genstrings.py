@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dotstrings.exceptions import DotStringsException
 
@@ -28,13 +29,166 @@ def _convert_to_utf8(file_path: str) -> None:
     shutil.move(temp_file_path, file_path)
 
 
+def _clear_existing_strings(english_strings_directory: str) -> None:
+    """Clear existing .strings files in the directory.
+
+    :param english_strings_directory: Directory to clear .strings files from
+    """
+    for table in os.listdir(english_strings_directory):
+        # Do not clear non .strings files
+        if not table.endswith(".strings"):
+            continue
+        table_path = os.path.join(english_strings_directory, table)
+        with open(table_path, "w", encoding="utf-8") as table_file:
+            table_file.write("")
+
+
+def _create_file_chunks(file_paths: list[str], chunk_size: int) -> list[list[str]]:
+    """Split file paths into chunks.
+
+    :param file_paths: List of file paths to split
+    :param chunk_size: Size of each chunk
+    :return: List of file path chunks
+    """
+    chunks = []
+    for i in range(0, len(file_paths), chunk_size):
+        chunks.append(file_paths[i : i + chunk_size])
+    return chunks
+
+
+def _get_strings_files(english_strings_directory: str) -> list[str]:
+    """Get all .strings file paths in the directory.
+
+    :param english_strings_directory: Directory to search
+    :return: List of .strings file paths
+    """
+    strings_files = []
+    for file_name in os.listdir(english_strings_directory):
+        file_path = os.path.join(english_strings_directory, file_name)
+        # Check for file type and .strings extension
+        if file_name.endswith(".strings") and os.path.isfile(file_path):
+            strings_files.append(file_path)
+    return strings_files
+
+
+def _process_chunks(
+    chunks: list[list[str]], english_strings_directory: str, max_workers: int
+) -> None:
+    """Process chunks of files in parallel.
+
+    :param chunks: List of file chunks to process
+    :param english_strings_directory: Directory for output
+    :param max_workers: Number of workers to use
+    """
+    temp_dirs = []
+
+    try:
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(chunks))) as executor:
+            # Create temporary directories for each chunk so that we can process in parallel without file conflicts
+            for _ in chunks:
+                temp_dir = tempfile.mkdtemp()
+                temp_dirs.append(temp_dir)
+
+            # Submit tasks with their own temp directories
+            futures = {
+                executor.submit(_extract_strings, chunk, temp_dir): (chunk, temp_dir)
+                for chunk, temp_dir in zip(chunks, temp_dirs)
+            }
+
+            for future in as_completed(futures):
+                future.result()  # Raise any exceptions that occurred
+
+        # Merge all temp directories into final output
+        content_by_file: dict[str, list[str]] = {}
+        for temp_dir in temp_dirs:
+            for file_name in os.listdir(temp_dir):
+                if not file_name.endswith(".strings"):
+                    continue
+
+                with open(os.path.join(temp_dir, file_name), "r", encoding="utf-16") as temp_file:
+                    content = temp_file.read()
+
+                final_path = os.path.join(english_strings_directory, file_name)
+                content_by_file.setdefault(final_path, []).append(content)
+
+        # Write once per final file
+        for final_path, contents in content_by_file.items():
+            with open(final_path, "a", encoding="utf-16") as final_file:
+                for content in contents:
+                    final_file.write(content)
+
+    finally:
+        # Clean up temporary directories
+        for temp_dir in temp_dirs:
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+
+
+def _convert_strings_files(strings_files: list[str], max_workers: int) -> None:
+    """Convert .strings files to UTF-8 in parallel.
+
+    :param strings_files: List of .strings file paths to convert
+    :param max_workers: Number of workers to use
+    """
+    if max_workers == 1 or len(strings_files) < 100:
+        # For small numbers of files, parallelism adds more overhead than it's worth
+        for strings_file in strings_files:
+            _convert_to_utf8(strings_file)
+    else:
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(strings_files))) as executor:
+            futures = {
+                executor.submit(_convert_to_utf8, file_path): file_path
+                for file_path in strings_files
+            }
+            for future in as_completed(futures):
+                future.result()  # Raise any exceptions that occurred
+
+
+def _extract_strings(file_paths: list[str], english_strings_directory: str) -> None:
+    """Extract strings for a chunk of files.
+
+    :param list[str] file_paths: The files to extract strings from
+    :param str english_strings_directory: The directory to place the extracted strings
+    """
+    genstrings_command = ["xcrun", "extractLocStrings", "-a", "-noPositionalParameters", "-u"]
+    genstrings_command += ["-o", english_strings_directory]
+    genstrings_command.extend(file_paths)
+
+    try:
+        output_bytes = subprocess.run(
+            genstrings_command,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).stdout
+
+        # We decode here rather than in the subprocess call because it seems
+        # that extractLocStrings can occasionally flush its buffer without
+        # writing the entirety of a character out. When that happens, the
+        # text wrapper tries to decode it and fails. By buffering all bytes
+        # until the end of the command and then decoding, we avoid this
+        # issue.
+        output = output_bytes.decode("utf-8", errors="backslashreplace")
+
+        output = output.strip()
+
+        if len(output) > 0:
+            raise DotStringsException(f"Encountered an error generating strings: {output}")
+    except subprocess.CalledProcessError as ex:
+        raise DotStringsException(f"Unable generate .strings files! {ex}") from ex
+
+
 def generate_strings(
-    *, output_directory: str, file_paths: list[str], clear_existing: bool = True
+    *,
+    output_directory: str,
+    file_paths: list[str],
+    clear_existing: bool = True,
+    max_workers: int = 1,
 ) -> None:
     """Run the genstrings command over the files passed in.
 
     Genstrings scans code files for usage of the `NSLocalizedString` macro. It
-    the generates the corresponding .strings file from these. e.g. If you have:
+    then generates the corresponding .strings file from these. e.g. If you have:
 
     ```objc
     label.text = NSLocalizedString(@"Hello World", @"Greeting to the user");
@@ -58,6 +212,8 @@ def generate_strings(
     :param bool clear_existing: Set to True when the existing files in the
                                 output directory should be wiped before
                                 generating the new strings. Defaults to True.
+    :param int max_workers: The maximum number of worker threads to use for parallel processing.
+                            Defaults to 1 (no parallelism).
 
     :raises Exception: If we can't generate the .strings files
     """
@@ -70,54 +226,16 @@ def generate_strings(
 
     # Empty existing strings
     if clear_existing:
-        for table in os.listdir(english_strings_directory):
-            # Do not clear non .strings files
-            if not table.endswith(".strings"):
-                continue
-            with open(
-                os.path.join(english_strings_directory, table), "w", encoding="utf-8"
-            ) as table_file:
-                table_file.write("")
+        _clear_existing_strings(english_strings_directory)
 
     # We can't pass in too many files on the command line or the argument list
-    # is too long. To avoid this, we do it in chunks of 100.
-    files_per_iteration = 100
+    # is too long. To avoid this, we do it in chunks of 500.
+    # Using larger chunks reduces subprocess overhead significantly.
+    chunks = _create_file_chunks(file_paths, chunk_size=500)
 
-    for i in range(0, (len(file_paths) // files_per_iteration) + 1):
+    # Process chunks in parallel
+    _process_chunks(chunks, english_strings_directory, max_workers)
 
-        # Take the next group of files
-        current_files = file_paths[i * files_per_iteration : (i + 1) * files_per_iteration]
-
-        genstrings_command = ["xcrun", "extractLocStrings", "-a", "-noPositionalParameters", "-u"]
-        genstrings_command += ["-o", english_strings_directory]
-        genstrings_command.extend(current_files)
-
-        try:
-            output_bytes = subprocess.run(
-                genstrings_command,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            ).stdout
-
-            # We decode here rather than in the subprocess call because it seems
-            # that extractLocStrings can occasionally flush its buffer without
-            # writing the entirety of a character out. When that happens, the
-            # text wrapper tries to decode it and fails. By buffering all bytes
-            # until the end of the command and then decoding, we avoid this
-            # issue.
-            output = output_bytes.decode("utf-8", errors="backslashreplace")
-
-            output = output.strip()
-
-            if len(output) > 0:
-                raise DotStringsException(f"Encountered an error generating strings: {output}")
-        except subprocess.CalledProcessError as ex:
-            raise DotStringsException(f"Unable generate .strings files! {ex}") from ex
-
-    # Convert all .strings files to UTF-8
-    for file_name in os.listdir(english_strings_directory):
-        file_path = os.path.join(english_strings_directory, file_name)
-        # Check for file type and .strings extension
-        if file_name.endswith(".strings") and os.path.isfile(file_path):
-            _convert_to_utf8(file_path)
+    # Convert all .strings files to UTF-8 in parallel
+    strings_files = _get_strings_files(english_strings_directory)
+    _convert_strings_files(strings_files, max_workers)
