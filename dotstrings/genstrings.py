@@ -21,10 +21,16 @@ def _convert_to_utf8(file_path: str) -> None:
 
     temp_file_path = tempfile.mktemp()
 
-    iconv_command = f'iconv -f UTF-16 -t UTF-8 "{file_path}" > "{temp_file_path}"'
+    iconv_command = ["iconv", "-f", "UTF-16", "-t", "UTF-8", file_path]
 
-    if subprocess.run(iconv_command, shell=True, check=False).returncode != 0:
+    result = subprocess.run(
+        iconv_command, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if result.returncode != 0:
         raise DotStringsException("Unable to convert from UTF-16 to UTF-8!")
+
+    with open(temp_file_path, "wb") as f:
+        f.write(result.stdout)
 
     shutil.move(temp_file_path, file_path)
 
